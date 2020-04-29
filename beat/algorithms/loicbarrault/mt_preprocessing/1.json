@@ -1,0 +1,45 @@
+{
+    "api_version": 2,
+    "description": "",
+    "groups": [
+        {
+            "inputs": {
+                "train_source_raw_text": {
+                    "type": "system/array_1d_text/1",
+                "train_target_raw_text": {
+                    "type": "system/array_1d_text/1",
+                "valid_source_raw_text": {
+                    "type": "system/array_1d_text/1",
+                "valid_target_raw_text": {
+                    "type": "system/array_1d_text/1"
+            },
+            "name": "group",
+            "outputs": {
+                "train_source_tokenized_text": {
+                    "type": "system/array_1d_text/1",
+                "train_target_tokenized_test": {
+                    "type": "system/array_1d_text/1",
+                "valid_source_tokenized_text": {
+                    "type": "system/array_1d_text/1",
+                "valid_target_tokenized_text": {
+                    "type": "system/array_1d_text/1",
+                "subword_model":
+                    "type": "system/text/1"
+    ],
+    "language": "python",
+    "parameters": {
+        "source_language": {
+            "default": "en",
+            "description": "Language of this text coded in 2 characters (e.g. en, fr, de ...)",
+            "type": "string",
+        "target_language": {
+            "default": "fr",
+            "description": "Language of this text coded in 2 characters (e.g. en, fr, de ...)",
+            "type": "string"
+        }
+    },
+    "schema_version": 3,
+    "splittable": false,
+    "type": "sequential",
+    "uses": {}
+}

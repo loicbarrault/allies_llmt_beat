@@ -1,0 +1,21 @@
+Metadata-Version: 1.2
+Name: sacrebleu
+Version: 1.4.7
+Summary: Hassle-free computation of shareable, comparable, and reproducible BLEU scores
+Home-page: https://github.com/mjpost/sacrebleu
+Author: Matt Post
+Author-email: post@cs.jhu.edu
+Maintainer-email: post@cs.jhu.edu
+License: Apache License 2.0
+Description: SacreBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.
+Keywords: machine translation, evaluation, NLP, natural language processing, computational linguistics
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Text Processing
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3

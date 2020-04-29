@@ -1,0 +1,7 @@
+{
+    "#description": "Summarize required information for the file ",
+    "file_id": "string",
+    "supervision": "string",
+    "time_stamp": "string",
+    "in_dev": "bool"
+}

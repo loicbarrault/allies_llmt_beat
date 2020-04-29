@@ -1,0 +1,221 @@
+{
+    "api_version": 2,
+    "description": "Train a translation system and output a model",
+    "groups": [
+        {
+            "inputs": {
+                "train_data": { "type": "system/text/1" },
+                "source_vocabulary": { "type": "system/text/1" },
+                "target_vocabulary": { "type": "system/text/1" }
+            },
+            "name": "group",
+            "outputs": {
+                "model": { "type": "anthony_larcher/array_1d_uint8/1" }
+            }
+        }
+    ],
+    "language": "python",
+    "parameters": {
+        "eval_metrics": {
+            "default": "sacrebleu_mem,loss",
+            "type": "string",
+            "choice": [ "sacrebleu_mem,loss" ],
+            "description": ""
+        },
+        "max_len": {
+            "default": "None",
+            "type": "string",
+            "choice": [ "None" ],
+            "description": ""
+        },
+        "dec_init": {
+            "default": "zero",
+            "type": "string",
+            "choice": [ "zero" ],
+            "description": ""
+        },
+        "eval_batch_size": {
+            "default": 12,
+            "type": "uint32",
+            "description": ""
+        },
+        "enc_dim": {
+            "default": 256,
+            "type": "uint32",
+            "description": ""
+        },
+        "eval_max_len": {
+            "default": 100,
+            "type": "uint32",
+            "description": ""
+        },
+        "gclip": {
+            "default": 1,
+            "type": "uint32",
+            "description": ""
+        },
+        "dropout_emb": {
+            "default": 0.4,
+            "type": "float32",
+            "description": ""
+        },
+        "lr": {
+            "default": 0.0004,
+            "type": "float32",
+            "description": ""
+        },
+        "eval_beam": {
+            "default": 6,
+            "type": "uint32",
+            "description": ""
+        },
+        "batch_size": {
+            "default": 64,
+            "type": "uint32",
+            "description": ""
+        },
+        "save_best_metrics": {
+            "default": true,
+            "type": "bool",
+            "description": ""
+        },
+        "l2_reg": {
+            "default": 0,
+            "type": "uint32",
+            "description": ""
+        },
+        "lr_decay_factor": {
+            "default": 0.5,
+            "type": "float32",
+            "description": ""
+        },
+        "tied_emb": {
+            "default": "2way",
+            "type": "string",
+            "choice": [ "2way" ],
+            "description": ""
+        },
+        "bucket_by": {
+            "default": "en",
+            "type": "string",
+            "choice": [ "en" ],
+            "description": ""
+        },
+        "dropout_out": {
+            "default": 0.4,
+            "type": "float32",
+            "description": ""
+        },
+        "direction": {
+            "default": "en:Text -> fr:Text",
+            "type": "string",
+            "choice": [
+                "en:Text -> de:Text",
+                "en:Text -> fr:Text"
+            ],
+            "description": ""
+        },
+        "lr_decay_patience": {
+            "default": 3,
+            "type": "uint32",
+            "description": ""
+        },
+        "checkpoint_freq": {
+            "default": 1000,
+            "type": "uint32",
+            "description": ""
+        },
+        "lr_decay": {
+            "default": "plateau",
+            "type": "string",
+            "choice": [ "plateau" ],
+            "description": ""
+        },
+        "dec_dim": {
+            "default": 256,
+            "type": "uint32",
+            "description": ""
+        },
+        "att_bottleneck": {
+            "default": "hid",
+            "type": "string",
+            "choice": [ "hid" ],
+            "description": ""
+        },
+        "optimizer": {
+            "default": "adam",
+            "type": "string",
+            "choice": [ "adam" ],
+            "description": ""
+        },
+        "emb_dim": {
+            "default": 128,
+            "type": "uint32",
+            "description": ""
+        },
+        "eval_filters": {
+            "default": "de-bpe",
+            "type": "string",
+            "choice": [ "de-bpe" ],
+            "description": ""
+        },
+        "att_type": {
+            "default": "mlp",
+            "type": "string",
+            "choice": [ "mlp" ],
+            "description": ""
+        },
+        "patience": {
+            "default": 10,
+            "type": "uint32",
+            "description": ""
+        },
+        "max_epochs": {
+            "default": 100,
+            "type": "uint32",
+            "description": ""
+        },
+        "n_checkpoints": {
+            "default": 4,
+            "type": "uint32",
+            "description": ""
+        },
+        "seed": {
+            "default": 0,
+            "type": "uint64",
+            "description": ""
+        },
+        "n_encoders": {
+            "default": 2,
+            "type": "uint32",
+            "description": ""
+        },
+        "model_type": {
+            "default": "NMT",
+            "type": "string",
+            "choice": [
+                "NMT"
+            ],
+            "description": ""
+        },
+        "eval_freq": {
+            "default": 0,
+            "type": "uint32",
+            "description": ""
+        },
+        "lr_decay_revert": {
+            "default": false,
+            "type": "bool",
+            "description": ""
+        },
+        "dropout_ctx": {
+            "default": 0.4,
+            "type": "float32",
+            "description": ""
+        }
+    },
+    "schema_version": 3,
+    "splittable": false,
+    "type": "autonomous",
+    "uses": {}
+}

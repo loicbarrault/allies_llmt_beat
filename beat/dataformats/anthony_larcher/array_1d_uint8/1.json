@@ -1,0 +1,7 @@
+{
+    "#description": "Basic format containing a one-dimensional array of unsigned integer (8 bits) values",
+    "value": [
+        0,
+        "uint8"
+    ]
+}

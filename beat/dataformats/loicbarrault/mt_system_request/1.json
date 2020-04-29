@@ -1,0 +1,6 @@
+{
+    "#description": "Request from the system, that includes the type of request and the times to define the question.",
+    "request_type": "string",
+    "file_id": "string",
+    "sentence_id": "uint32"
+}

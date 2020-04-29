@@ -1,0 +1,43 @@
+{
+    "api_version": 2,
+    "language": "python",
+    "schema_version": 3,
+    "type": "sequential_loop_evaluator",
+    "groups": [
+        {
+            "inputs": {
+                "evaluator_file_info": {
+                    "type": "loicbarrault/mt_file_info/1"
+                },
+                "evaluator_source": {
+                    "type": "system/array_1d_text/1"
+                },
+                "evaluator_target": {
+                    "type": "system/array_1d_text/1"
+                }
+            },
+            "loop": {
+                "answer": {
+                    "type": "loicbarrault/mt_user_to_system/1"
+                },
+                "request": {
+                    "type": "loicbarrault/mt_system_to_user/1"
+                }
+            },
+            "name": "group_lifelong",
+            "outputs": {
+                "evaluator_output": {
+                    "type": "system/array_1d_uint32/1"
+                }
+            }
+        }
+    ],
+    "parameters": {
+        "max_cost_per_file": {
+            "default": 60.0,
+            "description": "Maximum amount of effort a user is going to do on a given file in seconds",
+            "type": "float32"
+        }
+    },
+    "description": "User simulation"
+}

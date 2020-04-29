@@ -1,0 +1,8 @@
+{
+    "#description": "Basic format containing a two-dimensional array of boolean values",
+    "value": [
+        0,
+        0,
+        "bool"
+    ]
+}

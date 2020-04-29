@@ -1,0 +1,7 @@
+{
+    "#description": "Basic format containing a one-dimensional array of integer values",
+    "value": [
+        0,
+        "int32"
+    ]
+}

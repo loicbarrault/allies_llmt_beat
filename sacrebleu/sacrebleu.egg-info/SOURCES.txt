@@ -1,0 +1,17 @@
+README.md
+setup.cfg
+setup.py
+sacrebleu/__init__.py
+sacrebleu/__main__.py
+sacrebleu/dataset.py
+sacrebleu/sacrebleu.py
+sacrebleu/tokenizer.py
+sacrebleu.egg-info/PKG-INFO
+sacrebleu.egg-info/SOURCES.txt
+sacrebleu.egg-info/dependency_links.txt
+sacrebleu.egg-info/entry_points.txt
+sacrebleu.egg-info/requires.txt
+sacrebleu.egg-info/top_level.txt
+test/test.py
+test/test_bleu.py
+test/test_chrf.py

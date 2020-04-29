@@ -1,0 +1,375 @@
+{
+    "analyzers": [
+        {
+            "inputs": [
+                "BLEU",
+                "file_info"
+            ],
+            "name": "mt_BLEU_collate",
+            "synchronized_channel": "mt_data_lifelong"
+        }
+    ],
+    "blocks": [
+        {
+            "inputs": [
+                "train_source_raw",
+                "train_target_raw",
+                "valid_source_raw",
+                "valid_target_raw"
+            ],
+            "name": "mt_train_preprocessor",
+            "outputs": [
+                "train_source_tokenized",
+                "train_target_tokenized",
+                "valid_source_tokenized",
+                "valid_target_tokenized",
+                "source_vocabulary",
+                "target_vocabulary",
+                "subword_model"
+            ],
+            "synchronized_channel": "mt_data_train"
+        },
+        {
+            "inputs": [
+                "lifelong_source_raw",
+                "lifelong_target_raw",
+                "source_vocabulary",
+                "target_vocabulary",
+                "subword_model"
+            ],
+            "name": "mt_apply_preprocessor",
+            "outputs": [
+                "lifelong_source_tokenized",
+                "lifelong_target_tokenized"
+            ],
+            "synchronized_channel": "mt_data_lifelong"
+        },
+        {
+            "inputs": [
+                "hypothesis",
+                "cost",
+                "reference"
+            ],
+            "name": "mt_evaluation_BLEU",
+            "outputs": [
+                "BLEU"
+            ],
+            "synchronized_channel": "mt_data_lifelong"
+        },
+        {
+            "inputs": [
+                "train_source",
+                "train_target",
+                "valid_source",
+                "valid_target",
+                "source_vocabulary",
+                "target_vocabulary",
+                "file_info"
+            ],
+            "name": "mt_train_initial_model",
+            "outputs": [
+                "model"
+            ],
+            "synchronized_channel": "mt_data_train"
+        }
+    ],
+    "connections": [
+        {
+            "channel": "mt_data_train",
+            "from": "mt_data_train.source",
+            "to": "mt_train_preprocessor.train_source_raw"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_data_train.target",
+            "to": "mt_train_preprocessor.train_target_raw"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_data_valid.source",
+            "to": "mt_train_preprocessor.valid_source_raw"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_data_valid.target",
+            "to": "mt_train_preprocessor.valid_target_raw"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_data_train.file_info",
+            "to": "mt_train_initial_model.file_info"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.train_source_tokenized",
+            "to": "mt_train_initial_model.train_source"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.train_target_tokenized",
+            "to": "mt_train_initial_model.train_target"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.valid_source_tokenized",
+            "to": "mt_train_initial_model.valid_source"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.valid_target_tokenized",
+            "to": "mt_train_initial_model.valid_target"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.source_vocabulary",
+            "to": "mt_train_initial_model.source_vocabulary"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.target_vocabulary",
+            "to": "mt_train_initial_model.target_vocabulary"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.train_source_tokenized",
+            "to": "loop.processor_train_source"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.train_target_tokenized",
+            "to": "loop.processor_train_target"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.valid_source_tokenized",
+            "to": "loop.processor_valid_source"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_preprocessor.valid_target_tokenized",
+            "to": "loop.processor_valid_target"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_data_train.file_info",
+            "to": "loop.processor_train_file_info"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.target",
+            "to": "mt_apply_preprocessor.lifelong_target_raw"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.source",
+            "to": "mt_apply_preprocessor.lifelong_source_raw"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_train_preprocessor.target_vocabulary",
+            "to": "mt_apply_preprocessor.target_vocabulary"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_train_preprocessor.source_vocabulary",
+            "to": "mt_apply_preprocessor.source_vocabulary"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_train_preprocessor.subword_model",
+            "to": "mt_apply_preprocessor.subword_model"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_apply_preprocessor.lifelong_source_tokenized",
+            "to": "loop.processor_lifelong_source"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_apply_preprocessor.lifelong_target_tokenized",
+            "to": "loop.processor_lifelong_target"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.file_info",
+            "to": "loop.processor_lifelong_file_info"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_apply_preprocessor.lifelong_source_tokenized",
+            "to": "loop.evaluator_lifelong_source"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_apply_preprocessor.lifelong_target_tokenized",
+            "to": "loop.evaluator_lifelong_target"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.file_info",
+            "to": "loop.evaluator_lifelong_file_info"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_initial_model.model",
+            "to": "loop.model"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.file_info",
+            "to": "mt_BLEU_collate.file_info"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_evaluation_BLEU.BLEU",
+            "to": "mt_BLEU_collate.BLEU"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "loop.hypothesis",
+            "to": "mt_evaluation_BLEU.hypothesis"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_apply_preprocessor.lifelong_target_tokenized",
+            "to": "mt_evaluation_BLEU.reference"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "loop.evaluator_output",
+            "to": "mt_evaluation_BLEU.cost"
+        }
+    ],
+    "datasets": [
+        {
+            "name": "mt_data_lifelong",
+            "outputs": [
+                "source",
+                "target",
+                "file_info"
+            ]
+        },
+        {
+            "name": "mt_data_train",
+            "outputs": [
+                "source",
+                "target",
+                "file_info"
+            ]
+        },
+        {
+            "name": "mt_data_valid",
+            "outputs": [
+                "source",
+                "target",
+                "file_info"
+            ]
+        }
+    ],
+    "description": "",
+    "loops": [
+        {
+            "evaluator_inputs": [
+                "evaluator_lifelong_source",
+                "evaluator_lifelong_target",
+                "evaluator_lifelong_file_info"
+            ],
+            "evaluator_outputs": [
+                "evaluator_output"
+            ],
+            "name": "loop",
+            "processor_inputs": [
+                "model",
+                "processor_train_source",
+                "processor_train_target",
+                "processor_train_file_info",
+                "processor_valid_source",
+                "processor_valid_target",
+                "processor_lifelong_source",
+                "processor_lifelong_target",
+                "processor_lifelong_file_info"
+            ],
+            "processor_outputs": [
+                "hypothesis"
+            ],
+            "synchronized_channel": "mt_data_lifelong"
+        }
+    ],
+    "representation": {
+        "blocks": {
+            "loop": {
+                "col": -177,
+                "height": 428,
+                "row": 379,
+                "width": 390
+            },
+            "mt_BLEU_collate": {
+                "col": 674,
+                "height": 128,
+                "row": 863,
+                "width": 155
+            },
+            "mt_apply_preprocessor": {
+                "col": -897,
+                "height": 218,
+                "row": 691,
+                "width": 401
+            },
+            "mt_data_lifelong": {
+                "col": -1080,
+                "height": 158,
+                "row": 831,
+                "width": 148
+            },
+            "mt_data_train": {
+                "col": -1087,
+                "height": 158,
+                "row": 468,
+                "width": 126
+            },
+            "mt_data_valid": {
+                "col": -1071,
+                "height": 158,
+                "row": 18,
+                "width": 128
+            },
+            "mt_evaluation_BLEU": {
+                "col": 430,
+                "height": 158,
+                "row": 688,
+                "width": 183
+            },
+            "mt_train_initial_model": {
+                "col": -450,
+                "height": 278,
+                "row": 88,
+                "width": 241
+            },
+            "mt_train_preprocessor": {
+                "col": -900,
+                "height": 278,
+                "row": 89,
+                "width": 359
+            }
+        },
+        "channel_colors": {
+            "mt_data_lifelong": "#5500ff",
+            "mt_data_train": "#ff5500"
+        },
+        "connections": {
+            "mt_apply_preprocessor.lifelong_source_tokenized/loop.evaluator_lifelong_source": [],
+            "mt_apply_preprocessor.lifelong_target_tokenized/loop.evaluator_lifelong_target": [],
+            "mt_data_lifelong.file_info/loop.evaluator_lifelong_file_info": [],
+            "mt_data_lifelong.source/mt_apply_preprocessor.lifelong_source_raw": [],
+            "mt_data_lifelong.target/mt_apply_preprocessor.lifelong_target_raw": [],
+            "mt_data_train.source/mt_train_preprocessor.train_source_raw": [],
+            "mt_data_train.target/mt_train_preprocessor.train_target_raw": [],
+            "mt_train_initial_model.model/loop.model": [],
+            "mt_train_preprocessor.source_vocabulary/mt_train_initial_model.source_vocabulary": [],
+            "mt_train_preprocessor.target_vocabulary/mt_train_initial_model.target_vocabulary": [],
+            "mt_train_preprocessor.train_source_tokenized/loop.processor_train_source": [],
+            "mt_train_preprocessor.train_target_tokenized/loop.processor_train_target": []
+        }
+    },
+    "schema_version": 2
+}

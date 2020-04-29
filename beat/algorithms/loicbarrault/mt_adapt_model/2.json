@@ -1,0 +1,42 @@
+{
+    "api_version": 2,
+    "description": "Pretend to tune and test a translation model on the dev data",
+    "groups": [
+        {
+            "inputs": {
+                "model": {
+                    "type": "system/text/1"
+                }
+            },
+            "name": "group_train",
+            "outputs": {
+                "model": {
+                    "type": "system/text/1"
+                },
+                "translation_hyp": {
+                    "type": "system/array_1d_text/1"
+                }
+            }
+        },
+        {
+            "inputs": {
+                "file_info": {
+                    "type": "barrault/mt_file_info/1"
+                },
+                "source": {
+                    "type": "system/array_1d_text/1"
+                },
+                "target": {
+                    "type": "system/array_1d_text/1"
+                }
+            },
+            "name": "group_lifelong"
+        }
+    ],
+    "language": "python",
+    "parameters": {},
+    "schema_version": 3,
+    "splittable": false,
+    "type": "autonomous",
+    "uses": {}
+}

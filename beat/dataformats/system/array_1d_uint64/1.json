@@ -1,0 +1,7 @@
+{
+    "#description": "Basic format containing a one-dimensional array of unsigned integer (64 bits) values",
+    "value": [
+        0,
+        "uint64"
+    ]
+}

@@ -1,0 +1,5 @@
+{
+    "#description": "Contains the coordinates of a pixel",
+    "y": "int32",
+    "x": "int32"
+}

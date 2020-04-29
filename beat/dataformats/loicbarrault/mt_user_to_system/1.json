@@ -1,0 +1,7 @@
+{
+    "#description": "Answer from the user simulation to the system",
+    "answer": "string",
+    "response_type": "string",
+    "file_id": "string",
+    "sentence_id": "uint32"
+}

@@ -1,0 +1,6 @@
+{
+    "#description": "Hypothesis and question from the system",
+    "file_id": "string",
+    "hypothesis": "string",
+    "system_request": "loicbarrault/mt_system_request/1"
+}

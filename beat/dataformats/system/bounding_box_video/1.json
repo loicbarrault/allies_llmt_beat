@@ -1,0 +1,12 @@
+{
+    "value": [
+        0,
+        {
+            "frame_id": "uint64",
+            "height": "int32",
+            "top-left-x": "int32",
+            "top-left-y": "int32",
+            "width": "int32"
+        }
+    ]
+}

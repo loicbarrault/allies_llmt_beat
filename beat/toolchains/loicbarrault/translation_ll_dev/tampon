@@ -1,0 +1,86 @@
+
+        {
+            "channel": "mt_data_train",
+            "from": "mt_source_preprocessor.tokenized_text",
+            "to": "mt_loop.processor_train_source"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_target_preprocessor.tokenized_text",
+            "to": "mt_loop.processor_train_target"
+        }
+        {
+            "channel": "mt_data_train",
+            "from": "mt_data_train.file_info",
+            "to": "mt_loop.processor_train_file_info"
+        },
+        {
+            "channel": "mt_data_train",
+            "from": "mt_train_model.model",
+            "to": "mt_loop.model"
+        }
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.source",
+            "to": "mt_source_preprocessor_lifelong.raw_text"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.target",
+            "to": "mt_target_preprocessor_lifelong.raw_text"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_source_preprocessor_lifelong.tokenized_text",
+            "to": "mt_loop.processor_lifelong_source"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_target_preprocessor_lifelong.tokenized_text",
+            "to": "mt_loop.processor_lifelong_target"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.file_info",
+            "to": "mt_loop.processor_lifelong_file_info"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_source_preprocessor_lifelong.tokenized_text",
+            "to": "mt_loop.evaluator_lifelong_source"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_target_preprocessor_lifelong.tokenized_text",
+            "to": "mt_loop.evaluator_lifelong_target"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.file_info",
+            "to": "mt_loop.evaluator_lifelong_file_info"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_loop.hypothesis",
+            "to": "mt_evaluation_BLEU.hypothesis"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_loop.evaluator_output",
+            "to": "mt_evaluation_BLEU.cost"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_target_preprocessor_lifelong.tokenized_text",
+            "to": "mt_evaluation_BLEU.reference"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_evaluation_BLEU.BLEU",
+            "to": "mt_BLEU_collate.BLEU"
+        },
+        {
+            "channel": "mt_data_lifelong",
+            "from": "mt_data_lifelong.file_info",
+            "to": "mt_BLEU_collate.file_info"
+        }

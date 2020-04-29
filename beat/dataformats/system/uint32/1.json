@@ -1,0 +1,4 @@
+{
+    "#description": "Basic format containing only a single unsigned integer (32 bits) value",
+    "value": "uint32"
+}

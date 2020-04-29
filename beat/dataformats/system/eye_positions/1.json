@@ -1,0 +1,5 @@
+{
+    "#description": "The position of the eyes of a person in an image",
+    "right": "system/coordinates/1",
+    "left": "system/coordinates/1"
+}

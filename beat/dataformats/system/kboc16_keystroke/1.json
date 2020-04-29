@@ -1,0 +1,11 @@
+{
+    "#description": "Raw KBOC16 keystroke data",
+    "timestamps": [
+        0,
+        "int32"
+    ],
+    "key_events": [
+        0,
+        "string"
+    ]
+}

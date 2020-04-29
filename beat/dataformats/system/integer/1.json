@@ -1,0 +1,4 @@
+{
+    "#description": "Basic format containing only a single integer value",
+    "value": "int32"
+}

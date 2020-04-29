@@ -1,0 +1,46 @@
+{
+    "api_version": 2,
+    "description": "Evaluates the BLEU for a translation hypothesis",
+    "groups": [
+        {
+            "inputs": {
+                "penalisation": {
+                    "type": "system/array_1d_uint32/1"
+                },
+                "hypothesis": {
+                    "type": "system/array_1d_text/1"
+                },
+                "reference": {
+                    "type": "system/array_1d_text/1"
+                }
+            },
+            "name": "group_lifelong",
+            "outputs": {
+                "correct_counts": {
+                    "type": "system/array_1d_uint32/1"
+                },
+                "total_counts": {
+                    "type": "system/array_1d_uint32/1"
+                },
+                "hyp_len": {
+                    "type": "system/int64/1"
+                },
+                "ref_len": {
+                    "type": "system/int64/1"
+                }
+            }
+        }
+    ],
+    "language": "python",
+    "parameters": {
+        "case_sensitive": {
+            "default": true,
+            "description": "Whether the evaluation should be done taking case into account",
+            "type": "bool"
+        }
+    },
+    "schema_version": 3,
+    "splittable": true,
+    "type": "sequential",
+    "uses": {}
+}

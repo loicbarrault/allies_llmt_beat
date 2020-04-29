@@ -1,0 +1,3 @@
+typing
+portalocker
+mecab-python3

@@ -1,0 +1,4 @@
+{
+    "#description": "Basic format containing only a single unsigned integer (64 bits) value",
+    "value": "uint64"
+}

@@ -1,0 +1,56 @@
+{
+    "api_version": 2,
+    "description": "",
+    "groups": [
+        {
+            "inputs": {
+                "lifelong_source_raw": {
+                    "type": "system/array_1d_text/1"
+                },
+                "lifelong_target_raw": {
+                    "type": "system/array_1d_text/1"
+                }
+            },
+            "name": "group",
+            "outputs": {
+                "lifelong_source_tokenized": {
+                    "type": "system/array_1d_text/1"
+                },
+                "lifelong_target_tokenized": {
+                    "type": "system/array_1d_text/1"
+                }
+            }
+        },
+        {
+            "inputs": {
+                "source_vocabulary": {
+                    "type": "system/text/1"
+                },
+                "subword_model": {
+                    "type": "system/text/1"
+                },
+                "target_vocabulary": {
+                    "type": "system/text/1"
+                }
+            },
+            "name": "group_train"
+        }
+    ],
+    "language": "python",
+    "parameters": {
+        "source_language": {
+            "default": "en",
+            "description": "Language of this text coded in 2 characters (e.g. en, fr, de ...)",
+            "type": "string"
+        },
+        "target_language": {
+            "default": "fr",
+            "description": "Language of this text coded in 2 characters (e.g. en, fr, de ...)",
+            "type": "string"
+        }
+    },
+    "schema_version": 3,
+    "splittable": false,
+    "type": "sequential",
+    "uses": {}
+}

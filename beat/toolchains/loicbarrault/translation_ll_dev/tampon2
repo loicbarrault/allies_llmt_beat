@@ -1,0 +1,13 @@
+
+        "connections": {
+            "allies_diar_train_1.model/loop.model": [],
+            "allies_features_extractor_1.features/allies_diar_train_1.features": [],
+            "allies_features_extractor_10.features/loop.features": [],
+            "diarization_lifelong.file_info/loop.evaluator_file_info": [],
+            "diarization_lifelong.speech/allies_features_extractor_10.speech": [],
+            "diarization_lifelong.uem/loop.evaluator_uem": [],
+            "diarization_train.file_info/allies_diar_train_1.file_info": [],
+            "diarization_train.speakers/allies_diar_train_1.speakers": [],
+            "diarization_train.speech/allies_features_extractor_1.speech": [],
+            "diarization_train.uem/allies_diar_train_1.uem": []
+        }

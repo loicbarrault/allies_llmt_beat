@@ -1,0 +1,8 @@
+{
+    "#description": "Two-dimensional array of 8 unsigned integer values",
+    "value": [
+        0,
+        0,
+        "uint8"
+    ]
+}

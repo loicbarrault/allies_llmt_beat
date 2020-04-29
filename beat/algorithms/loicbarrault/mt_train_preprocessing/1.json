@@ -1,0 +1,47 @@
+{
+    "api_version": 2,
+    "description": "",
+    "groups": [
+        {
+            "inputs": {
+                "train_source_raw": { "type": "system/array_1d_text/1" },
+                "train_target_raw": { "type": "system/array_1d_text/1" },
+                "train_file_info": { "type": "loicbarrault/mt_file_info/1" }
+            },
+            "name": "group",
+            "outputs": {
+                "train_data_tokenized": { "type": "system/text/1" },
+                "source_vocabulary": { "type": "system/text/1" },
+                "target_vocabulary": { "type": "system/text/1" },
+                "subword_model": { "type": "system/text/1" }
+              }
+        }
+    ],
+    "language": "python",
+    "parameters": {
+        "source_language": {
+            "default": "en",
+            "description": "Language of this text coded in 2 characters (e.g. en, fr, de ...)",
+            "type": "string"
+        },
+        "target_language": {
+            "default": "fr",
+            "description": "Language of this text coded in 2 characters (e.g. en, fr, de ...)",
+            "type": "string"
+        },
+        "min_freq": {
+            "default": 0,
+            "description": "Minimum frequency of a token to appear in the voabulary",
+            "type": "int32"
+        },
+        "short_list": {
+            "default": 0,
+            "description": "Maximum size of the vocabulary (only the 'short_list' most frequent tokens will appear in the vocabulary)",
+            "type": "int32"
+        }
+    },
+    "schema_version": 3,
+    "splittable": false,
+    "type": "autonomous",
+    "uses": {}
+}

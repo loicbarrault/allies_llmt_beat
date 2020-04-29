@@ -1,0 +1,4 @@
+{
+    "#description": "Basic format containing only a single float value",
+    "value": "float64"
+}

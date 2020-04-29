@@ -1,0 +1,207 @@
+{
+    "analyzers": {
+        "mt_BLEU_collate": {
+            "algorithm": "loicbarrault/BLEU_collate/1",
+            "inputs": {
+                "correct_counts": "correct_counts",
+                "total_counts": "total_counts",
+                "ref_len": "ref_len",
+                "hyp_len": "hyp_len"
+            }
+        }
+    },
+    "blocks": {
+        "mt_evaluation_BLEU": {
+            "algorithm": "loicbarrault/mt_evaluation/1",
+            "inputs": {
+                "penalisation": "penalisation",
+                "hypothesis": "hypothesis",
+                "reference": "reference"
+            },
+            "outputs": {
+                "correct_counts": "correct_counts",
+                "total_counts": "total_counts",
+                "ref_len": "ref_len",
+                "hyp_len": "hyp_len"
+            }
+        },
+        "mt_train_preprocessor": {
+            "algorithm": "loicbarrault/mt_train_preprocessing/1",
+            "inputs": {
+                "train_source_raw": "train_source_raw",
+                "train_target_raw": "train_target_raw",
+                "train_file_info": "train_file_info"
+            },
+            "outputs": {
+                "train_data_tokenized": "train_data_tokenized",
+                "source_vocabulary": "source_vocabulary",
+                "target_vocabulary": "target_vocabulary",
+                "subword_model": "subword_model"
+            },
+            "parameters": {
+                "source_language": "en",
+                "target_language": "fr",
+                "min_freq": 0,
+                "short_list": 30000
+            }
+        },
+        "mt_apply_preprocessor": {
+            "algorithm": "loicbarrault/mt_apply_preprocessing/1",
+            "inputs": {
+                "lifelong_source_raw": "lifelong_source_raw",
+                "lifelong_target_raw": "lifelong_target_raw",
+                "source_vocabulary": "source_vocabulary",
+                "target_vocabulary": "target_vocabulary",
+                "subword_model": "subword_model"
+            },
+            "outputs": {
+                "lifelong_source_tokenized": "lifelong_source_tokenized",
+                "lifelong_target_tokenized": "lifelong_target_tokenized"
+            },
+            "parameters": {
+                "source_language": "en",
+                "target_language": "fr"
+            }
+        },
+        "mt_train_initial_model": {
+            "algorithm": "loicbarrault/mt_train_model/1",
+            "inputs": {
+                "train_data": "train_data",
+                "source_vocabulary": "source_vocabulary",
+                "target_vocabulary": "target_vocabulary"
+            },
+            "outputs": {
+                "model": "model"
+            }
+        }
+    },
+    "datasets": {
+        "mt_data_lifelong": {
+            "database": "allies-mt-internal/1",
+            "protocol": "translation",
+            "set": "mt_data_lifelong"
+        },
+        "mt_data_train": {
+            "database": "allies-mt-internal/1",
+            "protocol": "translation",
+            "set": "mt_data_train"
+        }
+    },
+    "globals": {
+        "loicbarrault/mt_train_model/1": {
+            "att_bottleneck": "hid",
+            "att_type": "mlp",
+            "batch_size": 64,
+            "bucket_by": "en",
+            "checkpoint_freq": 1000,
+            "dec_dim": 256,
+            "dec_init": "zero",
+            "direction": "en:Text -> fr:Text",
+            "dropout_ctx": 0.4,
+            "dropout_emb": 0.4,
+            "dropout_out": 0.4,
+            "emb_dim": 128,
+            "enc_dim": 256,
+            "eval_batch_size": 12,
+            "eval_beam": 6,
+            "eval_filters": "de-bpe",
+            "eval_freq": 0,
+            "eval_max_len": 100,
+            "eval_metrics": "sacrebleu_mem,loss",
+            "gclip": 1,
+            "l2_reg": 0,
+            "lr": 0.0004,
+            "lr_decay": "plateau",
+            "lr_decay_factor": 0.5,
+            "lr_decay_patience": 3,
+            "lr_decay_revert": false,
+            "max_epochs": 2,
+            "max_len": "None",
+            "model_type": "NMT",
+            "n_checkpoints": 4,
+            "n_encoders": 2,
+            "optimizer": "adam",
+            "patience": 10,
+            "save_best_metrics": true,
+            "seed": 21218,
+            "tied_emb": "2way"
+        },
+        "loicbarrault/mt_lifelong_loop/1": {
+            "att_bottleneck": "hid",
+            "att_type": "mlp",
+            "batch_size": 64,
+            "bucket_by": "en",
+            "checkpoint_freq": 1000,
+            "dec_dim": 256,
+            "dec_init": "zero",
+            "direction": "en:Text -> fr:Text",
+            "dropout_ctx": 0.4,
+            "dropout_emb": 0.4,
+            "dropout_out": 0.4,
+            "emb_dim": 128,
+            "enc_dim": 256,
+            "eval_batch_size": 12,
+            "eval_beam": 6,
+            "eval_filters": "de-bpe",
+            "eval_freq": 0,
+            "eval_max_len": 100,
+            "eval_metrics": "sacrebleu_mem,loss",
+            "gclip": 1,
+            "l2_reg": 0,
+            "lr": 0.0004,
+            "lr_decay": "plateau",
+            "lr_decay_factor": 0.5,
+            "lr_decay_patience": 3,
+            "lr_decay_revert": false,
+            "max_epochs": 100,
+            "max_len": "None",
+            "model_type": "NMT",
+            "n_checkpoints": 4,
+            "n_encoders": 2,
+            "optimizer": "adam",
+            "patience": 10,
+            "save_best_metrics": true,
+            "seed": 21218,
+            "tied_emb": "2way"
+        },
+        "loicbarrault/mt_evaluation/1": {
+            "case_sensitive": true
+        },
+        "loicbarrault/mt_train_preprocessing/1": {
+            "source_language": "en",
+            "target_language": "fr"
+        },
+        "loicbarrault/mt_user_simulation/1": {
+            "max_cost_per_file": 60.0
+        },
+        "environment": {
+            "name": "dummy",
+            "version": "0.0.0"
+        },
+        "queue": "queue"
+    },
+    "loops": {
+        "loop": {
+            "evaluator_algorithm": "loicbarrault/mt_user_simulation/1",
+            "evaluator_inputs": {
+                "evaluator_file_info": "evaluator_lifelong_file_info",
+                "evaluator_source": "evaluator_lifelong_source",
+                "evaluator_target": "evaluator_lifelong_target"
+            },
+            "evaluator_outputs": {
+                "evaluator_output": "evaluator_output"
+            },
+            "processor_algorithm": "loicbarrault/mt_lifelong_loop/1",
+            "processor_inputs": {
+                "model": "model",
+                "processor_lifelong_file_info": "processor_lifelong_file_info",
+                "processor_lifelong_source": "processor_lifelong_source",
+                "processor_train_data": "processor_train_data"
+            },
+            "processor_outputs": {
+                "hypothesis": "hypothesis"
+            }
+        }
+    },
+    "schema_version": 2
+}
