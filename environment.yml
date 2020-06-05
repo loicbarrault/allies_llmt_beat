@@ -24,3 +24,5 @@ dependencies:
     - editdistance==0.4
     - subword_nmt==0.3.5
     - ipdb
+    - portalocker=1.6.0
+    - mecab-python3
