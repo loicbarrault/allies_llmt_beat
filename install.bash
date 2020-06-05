@@ -27,8 +27,6 @@ cd nmtpytorch
 python setup.py develop
 cd ..
 
-exit
-
 cd sacrebleu
 python setup.py install
 cd ..
