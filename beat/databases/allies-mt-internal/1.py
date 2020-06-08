@@ -63,7 +63,7 @@ class View(View):
         self.target_lang = parameters["target_lang"]
         self.pair = '{}-{}'.format(self.source_lang, self.target_lang)
 
-        fl = get_file_list('{}/raw/{}/{}'.format(root_folder, self.pair, self.source_lang))
+        fl = get_file_list('{}/{}/{}'.format(root_folder, self.pair, self.source_lang))
         Entry = namedtuple(
             'Entry', ['root_folder', 'filename', 'file_info', 'source', 'target']
         )
@@ -107,13 +107,13 @@ class View(View):
         if output == 'file_info':
             return obj.file_info
         elif output == 'source':
-            with open("{}/raw/{}/{}/{}.txt".format(obj.root_folder, "en-fr", "en", obj.filename, 'r')) as fileh:
+            with open("{}/{}/{}/{}.txt".format(obj.root_folder, "en-fr", "en", obj.filename, 'r')) as fileh:
                 text = fileh.readlines()
             text = list(map(str.strip, text))
             #beat_logger.info(" -----------------------------------------------------------------------------------------------  NEW SOURCE: {}  #lines: {}".format(obj.filename, len(text)))
             return { 'text': text }
         elif output == 'target':
-            with open("{}/raw/{}/{}/{}.txt".format(obj.root_folder, "en-fr", "fr", obj.filename, 'r')) as fileh:
+            with open("{}/{}/{}/{}.txt".format(obj.root_folder, "en-fr", "fr", obj.filename, 'r')) as fileh:
                 text = fileh.readlines()
             text = list(map(str.strip, text))
             return { 'text': text }
