@@ -1,4 +1,4 @@
-name: beatTEST
+name: beat_allies
 channels:
   - https://www.idiap.ch/software/beat/conda
   - defaults
@@ -24,5 +24,7 @@ dependencies:
     - editdistance==0.4
     - subword_nmt==0.3.5
     - ipdb
-    - portalocker=1.6.0
+    - mosestokenizer
+    - h5py
+    - portalocker==1.6.0
     - mecab-python3
