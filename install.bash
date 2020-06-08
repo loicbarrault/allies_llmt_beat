@@ -4,7 +4,7 @@ echo "Updating conda if necessary"
 conda update -n base conda
 conda config --set show_channel_urls True
 
-echo "This will create a python env named 'beat' and install the necessary tools for LLMT"
+echo "This will create a python env named 'beat_allies' and install the necessary tools for LLMT"
 read -n 1 -p "Proceed? [y/n]" choice
 case "$choice" in 
   y|Y ) echo "Let's go!";;
@@ -13,7 +13,7 @@ case "$choice" in
 esac
 
 conda env create -f environment.yml
-conda activate beatTEST
+conda activate beat_allies
 
 echo "Installing third party tools: nmtpytorch sacrebleu"
 read -n 1 -p "Proceed? [y/n]" choice
