@@ -27,4 +27,5 @@ dependencies:
     - mosestokenizer
     - h5py
     - portalocker==1.6.0
+    - pathlib
     - mecab-python3
