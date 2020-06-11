@@ -40,7 +40,7 @@
             },
             "parameters": {
                 "source_language": "en",
-                "target_language": "fr",
+                "target_language": "de",
                 "min_freq": 0,
                 "short_list": 30000
             }
@@ -77,12 +77,12 @@
     },
     "datasets": {
         "mt_data_lifelong": {
-            "database": "allies_llmt_enfr/1",
+            "database": "allies_llmt_ende/1",
             "protocol": "translation",
             "set": "mt_data_lifelong"
         },
         "mt_data_train": {
-            "database": "allies_llmt_enfr/1",
+            "database": "allies_llmt_ende/1",
             "protocol": "translation",
             "set": "mt_data_train"
         }
@@ -96,7 +96,7 @@
             "checkpoint_freq": 1000,
             "dec_dim": 256,
             "dec_init": "zero",
-            "direction": "en:Text -> fr:Text",
+            "direction": "en:Text -> de:Text",
             "dropout_ctx": 0.4,
             "dropout_emb": 0.4,
             "dropout_out": 0.4,
@@ -134,7 +134,7 @@
             "checkpoint_freq": 1000,
             "dec_dim": 256,
             "dec_init": "zero",
-            "direction": "en:Text -> fr:Text",
+            "direction": "en:Text -> de:Text",
             "dropout_ctx": 0.4,
             "dropout_emb": 0.4,
             "dropout_out": 0.4,
@@ -169,7 +169,7 @@
         },
         "loicbarrault/mt_train_preprocessing/1": {
             "source_language": "en",
-            "target_language": "fr"
+            "target_language": "de"
         },
         "loicbarrault/mt_user_simulation/1": {
             "max_cost_per_file": 60.0

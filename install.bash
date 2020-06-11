@@ -13,7 +13,8 @@ case "$choice" in
 esac
 
 conda env create -f environment.yml
-conda activate beat_allies
+#conda init bash
+source activate beat_allies
 
 echo "Installing third party tools: nmtpytorch sacrebleu"
 read -n 1 -p "Proceed? [y/n]" choice
