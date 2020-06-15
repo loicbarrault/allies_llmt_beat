@@ -38,6 +38,7 @@ import pickle
 import struct
 import copy
 import logging
+import random
 
 from nmtpytorch.config import Options, TRAIN_DEFAULTS
 from nmtpytorch.translator import Translator
@@ -51,7 +52,8 @@ import pdb
 
 beat_logger = logging.getLogger('beat_lifelong_mt')
 beat_logger.setLevel(logging.DEBUG)
-#logging.basicConfig(level=logging.INFO, , format='LIFELONG: %(message)s')
+#logging.basicConfig(level=logging.DEBUG, format='LIFELONG: %(message)s')
+logging.basicConfig(level=logging.DEBUG)
 
 TRANSLATE_DEFAULTS = {
     'suppress_unk': False,                        #Do not generate <unk> tokens.')
@@ -67,7 +69,6 @@ TRANSLATE_DEFAULTS = {
     'override': [],                               #(section).key:value overrides for config")
     'stochastic': False,                          #Don't fix seed for sampling-based models.")
     'beam_func': 'beam_search',                   #Use a custom beam search method defined in the model.")
-
     # You can translate a set of splits defined in the .conf file with -s
     # Or you can provide another input configuration with -S
     # With this, the previous -s is solely used for the naming of the output file
@@ -76,8 +77,9 @@ TRANSLATE_DEFAULTS = {
     'source': None,                               #Comma-separated key:value pairs to provide new inputs.')
     'output': '/not/used/because/beat_platform'   #Output filename prefix')
     }
-
-
+'''
+TRANSLATE_DEFAULTS = {}
+'''
 def mt_to_allies(hypothesis):
     hyps = {"text": hypothesis}
     return hyps
@@ -153,7 +155,7 @@ def unsupervised_model_adaptation(source,
     return model, translator
 
 
-def generate_system_request_to_user(model, file_id, current_hypothesis):
+def generate_system_request_to_user(model, file_id, source,  current_hypothesis):
     """
     Include here your code to ask "questions" to the human in the loop
 
@@ -167,11 +169,15 @@ def generate_system_request_to_user(model, file_id, current_hypothesis):
     file_id must be an existing file_id of a document in the lifelong corpus
     sentence_id must be a unsigned int between 0 and document length
     """
+    # choose a sentence to be translated by the human translator
+    # For now, we'll use a random sentence
+    sid = random.randint(0, len(source)-1)
+
     #beat_logger.debug("### mt_lifelong_loop:generate_system_request_to_user")
     request = {
            "request_type": "reference",
            "file_id": '{}'.format(file_id),
-           "sentence_id": np.uint32(0)
+           "sentence_id": np.uint32(sid)
           }
 
     return request
@@ -185,7 +191,8 @@ def online_adaptation(model, global_diar, source, current_hypothesis, request, u
     Prototype of this function can be adapted to your need as it is internatl to this block
     """
 
-    print("### mt_lifelong_loop:online_adaptation")
+    beat_logger.debug("### mt_lifelong_loop:online_adaptation")
+    #print("### mt_lifelong_loop:online_adaptation")
     # Case of interactive learning (request is a fake one)
 
     # Case of active learning
@@ -296,11 +303,12 @@ class Algorithm:
         supervision = file_info.supervision
         time_stamp = file_info.time_stamp
 
-        print("mt_lifelong_loop::process: received document {} to translate ".format(file_id))
+        beat_logger.debug("mt_lifelong_loop::process: received document {} ({} sentences) to translate ".format(file_id, len(source)))
+        #print('mt_lifelong_loop::process: source = {}'.format(source))
+
 
         #TODO: prepare train/valid data for fine-tuning (eventually) -- might not be needed actually as the data is already contained in the training params -> this can be huge!
         current_hypothesis = run_translation(self.translator, source, file_id)
-
         # If human assisted learning is ON
         ###################################################################################################
         # Interact with the human if necessary
@@ -322,20 +330,19 @@ class Algorithm:
             current_hypothesis = run_translation(self.translator, source, file_id)
 
 
-
         # If human assisted learning mode is on (active or interactive learning)
         while human_assisted_learning:
 
             # Create an empty request that is used to initiate interactive learning
             # For the case of active learning, this request is overwritten by your system itself
             # For now, only requests of type 'reference' are allowed (i.e. give me the reference translation for sentence 'sentence_id' of file 'file_id')
-            request = {"request_type": "reference", "file_id": "fid", "sentence_id": 0}
+
 
             if supervision == "active":
                 # The system can send a question to the human in the loop
                 # by using an object of type request
                 # The request is the question asked to the system
-                request = generate_system_request_to_user(self.model, file_id, current_hypothesis)
+                request = generate_system_request_to_user(self.model, file_id, source, current_hypothesis)
 
                 # Send the request to the user and wait for the answer
                 message_to_user = {

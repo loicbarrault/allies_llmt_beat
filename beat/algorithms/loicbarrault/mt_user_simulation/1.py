@@ -43,6 +43,16 @@ beat_logger = logging.getLogger('beat_lifelong_mt')
 beat_logger.setLevel(logging.DEBUG)
 
 
+def get_document_length(doc):
+    nbw = 0
+    for sent in doc:
+        #print('doclen: sent=#{}# len={}'.format(sent.replace('@@ ', '').split(' '), len(sent.replace('@@ ', '').split(' '))))
+        nbw += len(sent.replace('@@ ', '').split(' '))
+    return nbw
+
+
+
+
 class Algorithm:
     def __init__(self):
         pass
@@ -50,7 +60,7 @@ class Algorithm:
     def setup(self, parameters):
         beat_logger.debug("### mt_user_simulation:setup ")
         self.cost = 0
-        self.penalisation = [0,0,0,0]
+        self.penalisation = [0]*NGRAM_ORDER
         beat_logger.debug("mt_user_simulation::init: params {}".format(parameters))
         self.max_cost_per_file = parameters["max_cost_per_file"]
         return True
@@ -59,25 +69,30 @@ class Algorithm:
         #beat_logger.debug("### mt_user_simulation:update_penalisation ")
         #TODO: compute cost of providing the reference for this sentence
         #NOTE: This cost will  be used to calculate the BLEU penalisation
+
+        #print("user_simulation::update_penalisation: answer = {}".format(answer))
+
         if answer["response_type"] == "reference":
-            new_pen = [ x + y for x, y in zip(self.penalisation, [ len(answer['answer']['value'])-x for x in range(NGRAM_ORDER) ] )]
-            nb_words = len(answer['answer']['value'].split())
-            print("Penalisation was {}, len(ref) is {}, new penalisation if {}".format(self.penalisation, nb_words, new_pen))
-            print("update penalisation: ref={}. length={}".format(answer['answer']['value'], nb_words))
+            answer_words = answer['answer']['value'].replace('@@ ', '').split()
+            nb_words = len(answer_words)
+            sent_pen = [ nb_words-x for x in range(NGRAM_ORDER) ]
+            new_pen = [ x + y for x, y in zip(self.penalisation, sent_pen )]
+            #print("Penalisation was {}, len(ref) is {}, new penalisation if {}".format(self.penalisation, nb_words, new_pen))
+            #print("update penalisation: ref='{}'. length={}".format(' '.join(answer_words), nb_words))
             self.penalisation = new_pen
             return nb_words
         return 0
 
     def validate(self, request):
         #beat_logger.info("### mt_user_simulation:validate ")
-        #beat_logger.info("mt_user_simulation::validate: file_id={} req.file_id={} system_request={}".format(self.file_info.file_id, request.file_id, request.system_request))
+        beat_logger.info("mt_user_simulation::validate: file_id={} req.file_id={} system_request={}".format(self.file_info.file_id, request.file_id, request.system_request))
         #beat_logger.debug("mt_user_simulation::validate: max_cost_per_doc = {} current cost = {}".format(self.max_cost_per_file, self.cost))
 
         file_id = self.file_info.file_id
         sent_id = request.system_request.sentence_id
 
         answer = {}
-        if self.cost >= self.max_cost_per_file:
+        if self.cost >= self.max_cost:
             #beat_logger.debug( "mt_user_simulation::validate: System reach maximum cost! ## sentence {} of file {}".format(sent_id, self.file_info.file_id))
             #print( "mt_user_simulation::validate: System reach maximum cost! ## sentence {} of file {}".format(sent_id, self.file_info.file_id))
             answer = {
@@ -112,7 +127,7 @@ class Algorithm:
 
     def write(self, outputs, processor_output_name, end_data_index):
         #beat_logger.debug("### mt_user_simulation:write ")
-        print( "user::write file={} cost={} penalisation={} end_data_index={}".format(self.file_info.file_id, self.cost, self.penalisation, end_data_index))
+        #print( "user::write file={} cost={} penalisation={} end_data_index={}".format(self.file_info.file_id, self.cost, self.penalisation, end_data_index))
         outputs["evaluator_output"].write({"value": self.penalisation}, end_data_index)
         return True
 
@@ -121,6 +136,11 @@ class Algorithm:
         self.file_info = inputs["evaluator_file_info"].data
         self.source = inputs["evaluator_source"].data
         self.reference = inputs["evaluator_target"].data
+        self.doc_len = get_document_length(self.reference.text)
+
+        self.max_cost = self.max_cost_per_file * self.doc_len / 100.0
+        beat_logger.debug('max cost = {}'.format(self.max_cost))
+
         self.penalisation = [0,0,0,0]
         self.cost = 0
         #beat_logger.debug( "user::read file {} supervision {} ".format(self.file_info.file_id, self.file_info.supervision))

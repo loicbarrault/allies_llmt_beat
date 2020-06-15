@@ -7,6 +7,7 @@ import logging
 import pdb
 
 beat_logger = logging.getLogger('beat_lifelong_mt')
+logging.basicConfig(level=logging.DEBUG)
 
 def compute_clipped_ngram_counts(ref, hyp, penalisation, case_sensitive):
     counts = [0,0,0,0]
@@ -25,6 +26,10 @@ def compute_clipped_ngram_counts(ref, hyp, penalisation, case_sensitive):
 
     bleu = sacrebleu.corpus_bleu(hyp, ref, lowercase=(case_sensitive==False))
 
+    #Apply penalisation
+    beat_logger.debug('counts before {}, pen {}'.format(bleu.counts, penalisation))
+    bleu.counts = [a - b for a, b in zip(bleu.counts, penalisation)]
+    beat_logger.debug('bleu after {}'.format(bleu.counts))
     # NOTE: test with the reference to get a 100% BLEU! -> it works!
     #bleu = sacrebleu.corpus_bleu(ref[0], ref, lowercase=(case_sensitive==False))
 
