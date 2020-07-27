@@ -38,7 +38,13 @@
             "default": 0,
             "description": "Maximum size of the vocabulary (only the 'short_list' most frequent tokens will appear in the vocabulary)",
             "type": "int32"
+        },
+        "max_sent_len": {
+            "default": 200,
+            "description": "Maximum length of tokenized sentence. Longer sentences are dropped",
+            "type": "int32"
         }
+
     },
     "schema_version": 3,
     "splittable": false,

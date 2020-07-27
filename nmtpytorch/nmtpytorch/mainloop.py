@@ -15,7 +15,7 @@ from .utils.tensorboard import TensorBoard
 from .utils.gpu_profile import trace_calls
 
 from pathlib import Path
-import pdb
+import ipdb
 import os
 import sys
 
@@ -288,6 +288,8 @@ class MainLoop:
         self.monitor.vctr += 1
         self.net.train(False)
         torch.set_grad_enabled(False)
+    
+        ipdb.set_trace()
 
         # Collect simple validation stats first
         self.print('Computing evaluation loss...')

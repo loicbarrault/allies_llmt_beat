@@ -25,10 +25,8 @@ beat_logger = logging.getLogger('beat_lifelong_mt')
 class Algorithm:
     # initialise fields to store cross-input data (e.g. machines, aggregations, etc.)
     def __init__(self):
-        self.distrib_nb = 4
-        self.iv_size = 50
-        self.plda_rank = 10
-        self.feature_size = None
+        self.data_dict_train = None
+        self.data_dict_dev = None
 
 
     def setup(self, parameters):

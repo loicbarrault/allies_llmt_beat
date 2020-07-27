@@ -98,7 +98,7 @@ def apply_bpe(bpe_model, text, merges=-1, vocab=None):
 Tokenise with Moses tokenizer
 Uses https://github.com/luismsgomes/mosestokenizer
 """
-def preprocess(data_dict, src_lang, trg_lang, min_freq=0, short_list=0):
+def preprocess(data_dict, src_lang, trg_lang, min_freq=0, short_list=0, max_sent_len=-1):
     src_text = []
     trg_text = []
 
@@ -124,10 +124,19 @@ def preprocess(data_dict, src_lang, trg_lang, min_freq=0, short_list=0):
 
     #NOTE: put back processed text into data dict
     for doc in data_dict:
-        for i in range(len(data_dict[doc]["source"])):
-            data_dict[doc]['source'][i] = src_text.pop(0)
-        for i in range(len(data_dict[doc]["source"])):
-            data_dict[doc]['target'][i] = trg_text.pop(0)
+        nbsent = len(data_dict[doc]["source"])
+        data_dict[doc]['source'] = []
+        data_dict[doc]['target'] = []
+        for i in range(nbsent):
+            src = src_text.pop(0)
+            trg = trg_text.pop(0)
+            if len(src.split(' ')) <=  max_sent_len and len(trg.split(' ')) <= max_sent_len:
+                data_dict[doc]['source'].append(src)
+                data_dict[doc]['target'].append(trg)
+
+        if len(data_dict[doc]['source']) == 0:
+            print("Document {} contains only lengthy sentences, I'm removing it...".format(doc))
+            del data_dict[doc]
 
     assert len(src_text) == 0 , "preprocess: something is wrong with source text"
     assert len(trg_text) == 0 , "preprocess: something is wrong with target text"
@@ -144,6 +153,7 @@ class Algorithm:
         self.target_language = parameters['target_language']
         self.min_freq = parameters['min_freq']
         self.short_list = parameters['short_list']
+        self.max_sent_len = parameters['max_sent_len']
         return True
 
 
@@ -155,7 +165,7 @@ class Algorithm:
         data_dict, end_index = setup_for_nmtpytorch(data_loaders)
 
         #NOTE: create vocabulary and BPE or SPM model
-        data_dict_tok, src_vocab, trg_vocab, subword_model = preprocess(data_dict, self.source_language, self.target_language, self.min_freq, self.short_list)
+        data_dict_tok, src_vocab, trg_vocab, subword_model = preprocess(data_dict, self.source_language, self.target_language, self.min_freq, self.short_list, self.max_sent_len)
 
         data_dict_pickle = pickle.dumps(data_dict_tok).decode("latin1")
 
