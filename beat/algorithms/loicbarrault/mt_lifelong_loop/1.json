@@ -37,7 +37,6 @@
         "max_len": {
             "default": "None",
             "type": "string",
-            "choice": [ "None" ],
             "description": ""
         },
         "dec_init": {

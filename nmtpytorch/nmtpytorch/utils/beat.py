@@ -12,6 +12,11 @@ from ..vocabulary import get_freqs, freqs_to_dict
 
 logger = logging.getLogger('nmtpytorch')
 
+
+"""
+Separate the data into train and dev
+each corpus is a dict with 2 keys 'src' and 'trg', each containing an array of sentences (str)
+"""
 def beat_separate_train_valid(data_dict):
     data_dict_train = {}
     data_dict_train['src'] = []

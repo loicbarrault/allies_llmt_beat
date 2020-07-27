@@ -1,5 +1,5 @@
 {
-    "#description": "Request from the system, that includes the type of request and the times to define the question.",
+    "#description": "Request from the system. Includes type of request and id of the doc and the sentence to tranlsate.",
     "request_type": "string",
     "file_id": "string",
     "sentence_id": "uint32"

@@ -78,7 +78,7 @@ class Algorithm:
         if parameters['max_len']=="None":
             self.params['model']['max_len']=None
         else:
-            self.params['model']['max_len']=parameters['max_len']
+            self.params['model']['max_len']=int(parameters['max_len'])
         self.params['model']['direction']="src:Text -> trg:Text"
 
         return True
@@ -92,15 +92,16 @@ class Algorithm:
 
         # separate train and dev data
         data_dict = pickle.loads(data["train_data"].text.encode("latin1"))
-        data_dict_train, data_dict_dev = beat_separate_train_valid(data_dict)
+        self.data_dict_train, self.data_dict_dev = beat_separate_train_valid(data_dict)
+
 
         self.params['data']={}
         self.params['data']['train_set']={}
-        self.params['data']['train_set']['src']=data_dict_train['src']
-        self.params['data']['train_set']['trg']=data_dict_train['trg']
+        self.params['data']['train_set']['src']=self.data_dict_train['src']
+        self.params['data']['train_set']['trg']=self.data_dict_train['trg']
         self.params['data']['val_set']={}
-        self.params['data']['val_set']['src']=data_dict_dev['src']
-        self.params['data']['val_set']['trg']=data_dict_dev['trg']
+        self.params['data']['val_set']['src']=self.data_dict_dev['src']
+        self.params['data']['val_set']['trg']=self.data_dict_dev['trg']
         self.params['vocabulary']={}
         self.params['vocabulary']['src']=data['source_vocabulary'].text
         self.params['vocabulary']['trg']=data['target_vocabulary'].text

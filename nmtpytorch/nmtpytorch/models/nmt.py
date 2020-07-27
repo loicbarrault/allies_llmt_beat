@@ -214,6 +214,9 @@ class NMT(nn.Module):
             bucket_order=self.opts.model['bucket_order'],
             sampler_type=self.opts.model['sampler_type'],
             beat_platform=self.beat_platform)
+        #if self.beat_platform:
+        #    for k in self.opts.data['{}_set'.format(split)]:
+        #        self.opts.data['{}_set'.format(split)][k] = {}
         logger.info(self.dataset)
         return self.dataset
 

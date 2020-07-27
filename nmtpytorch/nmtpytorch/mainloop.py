@@ -12,9 +12,12 @@ from .utils.misc import load_pt_file, fix_seed
 from .utils.ml_metrics import Loss
 from .utils.data import make_dataloader
 from .utils.tensorboard import TensorBoard
+from .utils.gpu_profile import trace_calls
 
 from pathlib import Path
-import ipdb
+import pdb
+import os
+import sys
 
 logger = logging.getLogger('nmtpytorch')
 
@@ -30,6 +33,12 @@ class MainLoop:
         self.oom_count = 0
         self.loss_meter = Loss()
         self._found_optim_state = None
+
+        # Tracing GPU mem usage for debugging
+        #os.environ['GPU_DEBUG'] = '0'
+        #os.environ['TRACE_INTO'] = 'train_epoch'
+        #sys.settrace(trace_calls)
+
 
         # Load training and validation data & create iterators
         self.print('Loading dataset(s)')
@@ -74,6 +83,7 @@ class MainLoop:
             # Relax the strict condition for partial initialization
             if beat_platform:
                 data = train_opts['pretrained_file']
+                train_opts['pretrained_file'] = {}
             else:
                 data = load_pt_file(train_opts['pretrained_file'])
             weights = data['model']

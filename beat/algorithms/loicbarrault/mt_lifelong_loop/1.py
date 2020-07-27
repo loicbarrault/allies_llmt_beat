@@ -183,22 +183,20 @@ def generate_system_request_to_user(model, file_id, source,  current_hypothesis)
     return request
 
 
-def online_adaptation(model, global_diar, source, current_hypothesis, request, user_answer):
+def online_adaptation(model, params, data_dict_train, file_id, doc_source, current_hypothesis):
     """
     Include here your code to adapt the model according
     to the human domain expert answer to the request
 
     Prototype of this function can be adapted to your need as it is internatl to this block
     """
-
     beat_logger.debug("### mt_lifelong_loop:online_adaptation")
     #print("### mt_lifelong_loop:online_adaptation")
-    # Case of interactive learning (request is a fake one)
 
     # Case of active learning
     new_hypothesis = current_hypothesis
 
-    return model, global_diar, new_hypothesis
+    return model, new_hypothesis
 
 
 class Algorithm:
@@ -209,7 +207,8 @@ class Algorithm:
         beat_logger.debug("### mt_lifelong_loop:init -- that's great!")
         self.model = None
         self.translator = None
-        self.train_data = None
+        self.data_dict_train = None
+        self.data_dict_dev = None
         self.translate_params=TRANSLATE_DEFAULTS
         self.init_end_index = -1
 
@@ -261,7 +260,7 @@ class Algorithm:
         if parameters['max_len']=="None":
             self.params['model']['max_len']=None
         else:
-            self.params['model']['max_len']=parameters['max_len']
+            self.params['model']['max_len']=int(parameters['max_len'])
         self.params['model']['direction']="src:Text -> trg:Text"
 
         return True
@@ -293,8 +292,9 @@ class Algorithm:
                 self.translate_params['source'] = source
                 self.translator = Translator(beat_platform=True, **self.translate_params)
 
-            if self.train_data is None:
-                data_dict = pickle.loads(data["processor_train_data"].text.encode("latin1"))
+            if self.data_dict_train is None:
+                self.data_dict = pickle.loads(data["processor_train_data"].text.encode("latin1"))
+                self.data_dict_train, self.data_dict_dev = beat_separate_train_valid(self.data_dict)
 
         # Access incoming file information
         # See documentation for a detailed description of the mt_file_info
@@ -321,7 +321,7 @@ class Algorithm:
             # for the new incoming data
             self.model, self.translator = unsupervised_model_adaptation(source,
                                          file_id,
-                                         data_dict,
+                                         self.train_data,
                                          self.model,
                                          self.translator,
                                          current_hypothesis
@@ -354,7 +354,20 @@ class Algorithm:
                 human_assisted_learning, user_answer = loop_channel.validate(message_to_user)
 
                 # Take into account the user answer to generate a new hypothesis and possibly update the model
-                self.model, self.translator, current_hypothesis = online_adaptation(self.model, self.translator, source, current_hypothesis, request, user_answer)
+                self.model = online_adaptation(self.model, self.params, self.data_dict_train, file_id, source, current_hypothesis)
+
+                # Update the translator object with the current model
+                self.translate_params['models'] = [self.model]
+                self.translator = Translator(beat_platform=True, **self.translate_params)
+
+                # Generate a new translation
+                new_hypothesis = run_translation(translator, source, file_id)
+                #new_hypothesis = current_hypothesis
+
+                beat_logger.debug("BEFORE online_adaptation: {}".format(current_hypothesis))
+                beat_logger.debug("AFTER online_adaptation : {}".format(new_hypothesis))
+
+
             else:
                 human_assisted_learning = False
 

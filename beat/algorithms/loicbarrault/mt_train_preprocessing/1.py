@@ -12,7 +12,7 @@ import mosestokenizer as mtok
 
 import subword_nmt as bpe
 from subword_nmt.learn_bpe import learn_bpe
-from subword_nmt.apply_bpe import BPE
+from subword_nmt.apply_bpe import BPE, read_vocabulary
 from subword_nmt.get_vocab import get_vocab
 
 
@@ -41,7 +41,7 @@ def setup_for_nmtpytorch(data_loaders):
 
     return data_dict, end_index
 
-def train_subword_model(src_text, trg_text):
+def train_subword_model(src_text, trg_text, nb_symbols=10000):
 
     # create text content with source and target text
     content = []
@@ -56,21 +56,23 @@ def train_subword_model(src_text, trg_text):
     # 1.1 cat {train_file}.L1 {train_file}.L2 | subword-nmt learn-bpe -s {num_operations} -o {codes_file}
     # 1.2 subword-nmt apply-bpe -c {codes_file} < {train_file}.L1 | subword-nmt get-vocab > {vocab_file}.L1
     # 1.3 subword-nmt apply-bpe -c {codes_file} < {train_file}.L2 | subword-nmt get-vocab > {vocab_file}.L2
-    nb_symbols = 1000
+
     # 1.1 learn_bpe(args.input, args.output, args.symbols, args.min_frequency, args.verbose, is_dict=args.dict_input, total_symbols=args.total_symbols))
     learn_bpe(content, bpe_model_io, nb_symbols, 0, False, False, False)
 
     # 1.2
     src_text_tok = apply_bpe(bpe_model_io, src_text, merges=nb_symbols)
     get_vocab(src_text_tok, src_vocab_io)
+    src_vocab = read_vocabulary(src_vocab_io, 0)
     # 1.3
     trg_text_tok = apply_bpe(bpe_model_io, trg_text, merges=nb_symbols)
     get_vocab(trg_text_tok, trg_vocab_io)
+    trg_vocab = read_vocabulary(trg_vocab_io, 0)
 
     # 3. Re-apply BPE with the obtained vocabulary
     # subword-nmt apply-bpe -c {codes_file} --vocabulary {vocab_file}.L1 --vocabulary-threshold 50 < {train_file}.L1 > {train_file}.BPE.L1
-    src_text_tok = apply_bpe(bpe_model_io, src_text_tok, vocab=src_vocab_io)
-    trg_text_tok = apply_bpe(bpe_model_io, trg_text_tok, vocab=trg_vocab_io)
+    src_text_tok = apply_bpe(bpe_model_io, src_text, vocab=src_vocab)
+    trg_text_tok = apply_bpe(bpe_model_io, trg_text, vocab=trg_vocab)
 
     bpe_model = bpe_model_io.getvalue()
 
@@ -85,10 +87,11 @@ def train_subword_model(src_text, trg_text):
 """
 def apply_bpe(bpe_model, text, merges=-1, vocab=None):
     #TODO: do something here
+    bpetext = []
     bpe = BPE(bpe_model, merges=merges, vocab=vocab)
-    for i, line in enumerate(text):
-        text[i] = bpe.process_line(line)
-    return text
+    for line in text:
+        bpetext.append(bpe.process_line(line))
+    return bpetext
 
 
 """
@@ -102,7 +105,7 @@ def preprocess(data_dict, src_lang, trg_lang, min_freq=0, short_list=0):
     src_tokenizer = mtok.MosesTokenizer(src_lang)
     trg_tokenizer = mtok.MosesTokenizer(trg_lang)
 
-    #TODO: tokenize data
+    # tokenize data
     for doc in data_dict:
         for i, t in enumerate(data_dict[doc]["source"]):
             data_dict[doc]["source"][i] = ' '.join(src_tokenizer(t))
@@ -112,10 +115,10 @@ def preprocess(data_dict, src_lang, trg_lang, min_freq=0, short_list=0):
             trg_text.append(data_dict[doc]["target"][i])
     src_tokenizer.close()
     trg_tokenizer.close()
-    #TODO: train subword model
-    subword_model, src_text, trg_text = train_subword_model(src_text, trg_text)
+    # train subword model
+    subword_model, src_text, trg_text = train_subword_model(src_text, trg_text, nb_symbols=short_list)
 
-    #TODO: Re-create the vocabulary with the nmtpy format
+    # Re-create the vocabulary with the nmtpy format
     src_vocab = create_vocab(src_text, min_freq, short_list)
     trg_vocab = create_vocab(trg_text, min_freq, short_list)
 
