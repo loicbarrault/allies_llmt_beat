@@ -48,7 +48,7 @@ from pathlib import Path
 
 from io import BytesIO
 
-import pdb
+import ipdb
 
 beat_logger = logging.getLogger('beat_lifelong_mt')
 beat_logger.setLevel(logging.DEBUG)
@@ -193,10 +193,16 @@ def online_adaptation(model, params, data_dict_train, file_id, doc_source, curre
     beat_logger.debug("### mt_lifelong_loop:online_adaptation")
     #print("### mt_lifelong_loop:online_adaptation")
 
-    # Case of active learning
-    new_hypothesis = current_hypothesis
+    # Tune the model with data similar to the document we want to translate
+    #data_dict_tune = select_data(file_id, doc_source, data_dict_train)
 
-    return model, new_hypothesis
+    # prepare model for adaptation
+    #loop = prepare_model_for_tuning(model, params, data_dict_tune)
+    # Run the adaptation
+    #new_model = loop()
+    new_model= model
+
+    return new_model
 
 
 class Algorithm:
@@ -206,6 +212,7 @@ class Algorithm:
     def __init__(self):
         beat_logger.debug("### mt_lifelong_loop:init -- that's great!")
         self.model = None
+        self.adapted_model = None
         self.translator = None
         self.data_dict_train = None
         self.data_dict_dev = None
@@ -278,7 +285,7 @@ class Algorithm:
         # Access source text of the current file to process
         source = inputs["processor_lifelong_source"].data.text
 
-        if self.translator is None or self.train_data is None:
+        if self.translator is None or self.data_dict_train is None:
             # Get the model after initial training
             dl = data_loaders[0]
             (data, _,end_index) = dl[0]
@@ -286,15 +293,15 @@ class Algorithm:
             # Create the nmtpy Translator object to translate
             if self.translator is None:
                 model_data = data['model'].value
-                model_data = struct.pack('{}B'.format(len(model_data)), *list(model_data))
+                self.model = struct.pack('{}B'.format(len(model_data)), *list(model_data))
                 # Create a Translator object from nmtpy
-                self.translate_params['models'] = [model_data]
+                self.translate_params['models'] = [self.model]
                 self.translate_params['source'] = source
                 self.translator = Translator(beat_platform=True, **self.translate_params)
 
             if self.data_dict_train is None:
-                self.data_dict = pickle.loads(data["processor_train_data"].text.encode("latin1"))
-                self.data_dict_train, self.data_dict_dev = beat_separate_train_valid(self.data_dict)
+                data_dict = pickle.loads(data["processor_train_data"].text.encode("latin1"))
+                self.data_dict_train, self.data_dict_dev = beat_separate_train_valid(data_dict)
 
         # Access incoming file information
         # See documentation for a detailed description of the mt_file_info
@@ -304,7 +311,7 @@ class Algorithm:
         time_stamp = file_info.time_stamp
 
         beat_logger.debug("mt_lifelong_loop::process: received document {} ({} sentences) to translate ".format(file_id, len(source)))
-        #print('mt_lifelong_loop::process: source = {}'.format(source))
+        beat_logger.debug('mt_lifelong_loop::process: source = {}'.format(source))
 
 
         #TODO: prepare train/valid data for fine-tuning (eventually) -- might not be needed actually as the data is already contained in the training params -> this can be huge!
@@ -354,19 +361,22 @@ class Algorithm:
                 human_assisted_learning, user_answer = loop_channel.validate(message_to_user)
 
                 # Take into account the user answer to generate a new hypothesis and possibly update the model
-                self.model = online_adaptation(self.model, self.params, self.data_dict_train, file_id, source, current_hypothesis)
+                self.adapted_model = online_adaptation(self.model, self.params, self.data_dict_train, file_id, source, current_hypothesis)
 
                 # Update the translator object with the current model
-                self.translate_params['models'] = [self.model]
+                model_data = struct.pack('{}B'.format(len(self.adapted_model)), *list(self.adapted_model))
+                self.translate_params['models'] = [model_data]
                 self.translator = Translator(beat_platform=True, **self.translate_params)
 
-                # Generate a new translation
-                new_hypothesis = run_translation(translator, source, file_id)
-                #new_hypothesis = current_hypothesis
+                #TODO: Generate a new translation
+                #new_hypothesis = run_translation(translator, source, file_id)
+                new_hypothesis = current_hypothesis
 
-                beat_logger.debug("BEFORE online_adaptation: {}".format(current_hypothesis))
-                beat_logger.debug("AFTER online_adaptation : {}".format(new_hypothesis))
-
+                #beat_logger.debug("BEFORE online_adaptation: {}".format(current_hypothesis))
+                #beat_logger.debug("AFTER online_adaptation : {}".format(new_hypothesis))
+                # Update the current hypothesis with the new one
+                current_hypothesis = new_hypothesis
+                human_assisted_learning = False
 
             else:
                 human_assisted_learning = False

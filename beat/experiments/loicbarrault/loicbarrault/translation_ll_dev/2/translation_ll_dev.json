@@ -42,7 +42,8 @@
                 "source_language": "en",
                 "target_language": "de",
                 "min_freq": 0,
-                "short_list": 30000
+                "short_list": 30000,
+                "max_sent_len": 200
             }
         },
         "mt_apply_preprocessor": {
