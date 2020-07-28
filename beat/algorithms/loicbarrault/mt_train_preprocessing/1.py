@@ -15,6 +15,7 @@ from subword_nmt.learn_bpe import learn_bpe
 from subword_nmt.apply_bpe import BPE, read_vocabulary
 from subword_nmt.get_vocab import get_vocab
 
+import ipdb
 
 beat_logger = logging.getLogger('beat_lifelong_mt')
 #beat_logger.setLevel(logging.DEBUG)
@@ -63,10 +64,12 @@ def train_subword_model(src_text, trg_text, nb_symbols=10000):
     # 1.2
     src_text_tok = apply_bpe(bpe_model_io, src_text, merges=nb_symbols)
     get_vocab(src_text_tok, src_vocab_io)
+    src_vocab_io.seek(0)
     src_vocab = read_vocabulary(src_vocab_io, 0)
     # 1.3
     trg_text_tok = apply_bpe(bpe_model_io, trg_text, merges=nb_symbols)
     get_vocab(trg_text_tok, trg_vocab_io)
+    trg_vocab_io.seek(0)
     trg_vocab = read_vocabulary(trg_vocab_io, 0)
 
     # 3. Re-apply BPE with the obtained vocabulary
@@ -80,7 +83,7 @@ def train_subword_model(src_text, trg_text, nb_symbols=10000):
     src_vocab_io.close()
     trg_vocab_io.close()
 
-    return bpe_model, src_text_tok, trg_text_tok
+    return bpe_model, src_vocab, trg_vocab, src_text_tok, trg_text_tok
 
 """
 
@@ -116,7 +119,7 @@ def preprocess(data_dict, src_lang, trg_lang, min_freq=0, short_list=0, max_sent
     src_tokenizer.close()
     trg_tokenizer.close()
     # train subword model
-    subword_model, src_text, trg_text = train_subword_model(src_text, trg_text, nb_symbols=short_list)
+    subword_model, subword_src_vocab, subword_trg_vocab, src_text, trg_text = train_subword_model(src_text, trg_text, nb_symbols=short_list)
 
     # Re-create the vocabulary with the nmtpy format
     src_vocab = create_vocab(src_text, min_freq, short_list)
@@ -141,7 +144,7 @@ def preprocess(data_dict, src_lang, trg_lang, min_freq=0, short_list=0, max_sent
     assert len(src_text) == 0 , "preprocess: something is wrong with source text"
     assert len(trg_text) == 0 , "preprocess: something is wrong with target text"
 
-    return data_dict, src_vocab, trg_vocab, subword_model
+    return data_dict, src_vocab, trg_vocab, subword_model, subword_src_vocab, subword_trg_vocab
 
 
 
@@ -165,14 +168,18 @@ class Algorithm:
         data_dict, end_index = setup_for_nmtpytorch(data_loaders)
 
         #NOTE: create vocabulary and BPE or SPM model
-        data_dict_tok, src_vocab, trg_vocab, subword_model = preprocess(data_dict, self.source_language, self.target_language, self.min_freq, self.short_list, self.max_sent_len)
+        data_dict_tok, src_vocab, trg_vocab, subword_model, subword_src_vocab, subword_trg_vocab = preprocess(data_dict, self.source_language, self.target_language, self.min_freq, self.short_list, self.max_sent_len)
 
         data_dict_pickle = pickle.dumps(data_dict_tok).decode("latin1")
+        subword_src_vocab = pickle.dumps(subword_src_vocab).decode('latin1')
+        subword_trg_vocab = pickle.dumps(subword_trg_vocab).decode('latin1')
 
         outputs['train_data_tokenized'].write({'text':data_dict_pickle}, end_index)
         outputs['source_vocabulary'].write({'text':src_vocab}, end_index)
         outputs['target_vocabulary'].write({'text':trg_vocab}, end_index)
         outputs['subword_model'].write({'text':subword_model}, end_index)
+        outputs['subword_source_vocabulary'].write({'text':subword_src_vocab}, end_index)
+        outputs['subword_target_vocabulary'].write({'text':subword_trg_vocab}, end_index)
         beat_logger.debug("############## End of mt_train_preprocessing ############")
 
         # always return True, it signals BEAT to continue processing

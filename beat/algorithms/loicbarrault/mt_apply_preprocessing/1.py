@@ -4,10 +4,11 @@ import numpy
 import logging
 import mosestokenizer as mtok
 import io
+import pickle
 
 from subword_nmt.apply_bpe import BPE
 
-import pdb
+import ipdb
 beat_logger = logging.getLogger('beat_lifelong_mt')
 
 """
@@ -48,9 +49,9 @@ class Algorithm:
         if self.src_bpe is None or self.trg_bpe is None or self.src_vocab is None or self.trg_vocab is None:
             (data, _, end_data_index) = data_loaders[0][0]
             if self.src_vocab is None:
-                self.src_vocab = io.StringIO(data["source_vocabulary"].text)
+                self.src_vocab = pickle.loads(data["subword_source_vocabulary"].text.encode("latin1"))
             if self.trg_vocab is None:
-                self.trg_vocab = io.StringIO(data["target_vocabulary"].text)
+                self.trg_vocab = pickle.loads(data["subword_target_vocabulary"].text.encode("latin1"))
 
             subword_model = io.StringIO(data["subword_model"].text)
             if self.src_bpe is None:
@@ -58,16 +59,18 @@ class Algorithm:
             if self.trg_bpe is None:
                 self.trg_bpe = BPE(subword_model, vocab=self.trg_vocab)
 
-        lifelong_source_raw = inputs['lifelong_source_raw'].data.text
-        lifelong_target_raw = inputs['lifelong_target_raw'].data.text
+        lifelong_source_raw = []
+        for s in inputs['lifelong_source_raw'].data.text:
+            lifelong_source_raw.append(s)
+
+        lifelong_target_raw = []
+        for s in inputs['lifelong_target_raw'].data.text:
+            lifelong_target_raw.append(s)
 
         #TODO: apply subword model to the lifelong data 
         # but for now, let's just pass the text as is
         lifelong_source_tok = preprocess(lifelong_source_raw, self.src_tokenizer, self.src_bpe )
         lifelong_target_tok = preprocess(lifelong_target_raw, self.trg_tokenizer, self.trg_bpe )
-
-        assert lifelong_source_tok.shape == lifelong_source_raw.shape, " bad preprocess for source sentence {}".format(lifelong_source_raw)
-        assert lifelong_target_tok.shape == lifelong_target_raw.shape, " bad preprocess for target sentence {}".format(lifelong_target_raw)
 
         outputs['lifelong_source_tokenized'].write({'text':lifelong_source_tok})
         outputs['lifelong_target_tokenized'].write({'text':lifelong_target_tok})
@@ -79,8 +82,6 @@ class Algorithm:
         if not inputs.hasMoreData():
             self.src_tokenizer.close()
             self.trg_tokenizer.close()
-            self.src_vocab.close()
-            self.trg_vocab.close()
 
         return True
 

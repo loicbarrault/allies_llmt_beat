@@ -311,7 +311,7 @@ class Algorithm:
         time_stamp = file_info.time_stamp
 
         beat_logger.debug("mt_lifelong_loop::process: received document {} ({} sentences) to translate ".format(file_id, len(source)))
-        beat_logger.debug('mt_lifelong_loop::process: source = {}'.format(source))
+        #beat_logger.debug('mt_lifelong_loop::process: source = {}'.format(source))
 
 
         #TODO: prepare train/valid data for fine-tuning (eventually) -- might not be needed actually as the data is already contained in the training params -> this can be huge!

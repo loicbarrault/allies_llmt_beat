@@ -12,7 +12,7 @@ from .utils.misc import load_pt_file, fix_seed
 from .utils.ml_metrics import Loss
 from .utils.data import make_dataloader
 from .utils.tensorboard import TensorBoard
-from .utils.gpu_profile import trace_calls
+#from .utils.gpu_profile import trace_calls
 
 from pathlib import Path
 import ipdb

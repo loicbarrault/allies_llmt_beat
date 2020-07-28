@@ -36,7 +36,9 @@
                 "train_data_tokenized": "train_data_tokenized",
                 "source_vocabulary": "source_vocabulary",
                 "target_vocabulary": "target_vocabulary",
-                "subword_model": "subword_model"
+                "subword_model": "subword_model",
+                "subword_source_vocabulary": "subword_source_vocabulary",
+                "subword_target_vocabulary": "subword_target_vocabulary"
             },
             "parameters": {
                 "source_language": "en",
@@ -51,8 +53,8 @@
             "inputs": {
                 "lifelong_source_raw": "lifelong_source_raw",
                 "lifelong_target_raw": "lifelong_target_raw",
-                "source_vocabulary": "source_vocabulary",
-                "target_vocabulary": "target_vocabulary",
+                "subword_source_vocabulary": "subword_source_vocabulary",
+                "subword_target_vocabulary": "subword_target_vocabulary",
                 "subword_model": "subword_model"
             },
             "outputs": {

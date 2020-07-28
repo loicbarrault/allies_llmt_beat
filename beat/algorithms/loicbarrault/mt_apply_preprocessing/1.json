@@ -23,13 +23,13 @@
         },
         {
             "inputs": {
-                "source_vocabulary": {
+                "subword_source_vocabulary": {
                     "type": "system/text/1"
                 },
                 "subword_model": {
                     "type": "system/text/1"
                 },
-                "target_vocabulary": {
+                "subword_target_vocabulary": {
                     "type": "system/text/1"
                 }
             },

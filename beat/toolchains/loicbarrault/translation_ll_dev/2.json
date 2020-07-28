@@ -10,12 +10,12 @@
         {
             "inputs": [ "train_source_raw", "train_target_raw", "train_file_info" ],
             "name": "mt_train_preprocessor",
-            "outputs": [ "train_data_tokenized", "source_vocabulary", "target_vocabulary", "subword_model" ],
+            "outputs": [ "train_data_tokenized", "source_vocabulary", "target_vocabulary", "subword_model", "subword_src_vocabulary", "subword_target_vocabulary" ],
             "synchronized_channel": "mt_data_train"
         },
         {
             "inputs": [
-                "lifelong_source_raw", "lifelong_target_raw", "source_vocabulary", "target_vocabulary", "subword_model"
+                "lifelong_source_raw", "lifelong_target_raw", "subword_source_vocabulary", "subword_target_vocabulary", "subword_model"
             ],
             "name": "mt_apply_preprocessor",
             "outputs": [ "lifelong_source_tokenized", "lifelong_target_tokenized" ],
@@ -90,13 +90,13 @@
         },
         {
             "channel": "mt_data_train",
-            "from": "mt_train_preprocessor.target_vocabulary",
-            "to": "mt_apply_preprocessor.target_vocabulary"
+            "from": "mt_train_preprocessor.subword_target_vocabulary",
+            "to": "mt_apply_preprocessor.subword_target_vocabulary"
         },
         {
             "channel": "mt_data_train",
-            "from": "mt_train_preprocessor.source_vocabulary",
-            "to": "mt_apply_preprocessor.source_vocabulary"
+            "from": "mt_train_preprocessor.subword_source_vocabulary",
+            "to": "mt_apply_preprocessor.subword_source_vocabulary"
         },
         {
             "channel": "mt_data_train",
