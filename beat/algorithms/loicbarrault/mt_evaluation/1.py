@@ -4,7 +4,7 @@
 import numpy as np
 import sacrebleu
 import logging
-import pdb
+import ipdb
 
 beat_logger = logging.getLogger('beat_lifelong_mt')
 logging.basicConfig(level=logging.DEBUG)
@@ -27,9 +27,11 @@ def compute_clipped_ngram_counts(ref, hyp, penalisation, case_sensitive):
     bleu = sacrebleu.corpus_bleu(hyp, ref, lowercase=(case_sensitive==False))
 
     #Apply penalisation
-    beat_logger.debug('counts before {}, pen {}'.format(bleu.counts, penalisation))
-    bleu.counts = [a - b for a, b in zip(bleu.counts, penalisation)]
-    beat_logger.debug('bleu after {}'.format(bleu.counts))
+    #beat_logger.debug('counts before {}, pen {}'.format(bleu.counts, penalisation))
+    #FIXME: Do we allow negative counts?
+    #bleu.counts = [a - b for a, b in zip(bleu.counts, penalisation)]
+    bleu.counts = [max(a - b, 0) for a, b in zip(bleu.counts, penalisation)]
+    #beat_logger.debug('bleu after {}'.format(bleu.counts))
     # NOTE: test with the reference to get a 100% BLEU! -> it works!
     #bleu = sacrebleu.corpus_bleu(ref[0], ref, lowercase=(case_sensitive==False))
 
@@ -46,7 +48,6 @@ class Algorithm:
     def setup(self, parameters):
         self.case_sensitive = parameters.get('case_sensitive', False)
         return True
-
 
     # this will be called each time the sync'd input has more data available to be processed
     def process(self, inputs, data_loaders, outputs):
