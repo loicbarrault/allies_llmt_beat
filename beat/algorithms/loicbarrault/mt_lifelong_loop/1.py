@@ -342,7 +342,7 @@ class Algorithm:
         self.params['train']['save_optim_state']=False
 
         self.params['train']['save_path']=Path("/not/used/because/beat_platform")
-        self.params['train']['tensorboard_dir']="/lium/users/barrault/llmt/tensorboard"
+        #self.params['train']['tensorboard_dir']="/lium/users/barrault/llmt/tensorboard"
 
         self.params['model']['att_type']=parameters['att_type']
         self.params['model']['att_bottleneck']=parameters['att_bottleneck']
