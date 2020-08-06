@@ -73,11 +73,11 @@ class Algorithm:
         #print("user_simulation::update_penalisation: answer = {}".format(answer))
 
         if answer["response_type"] == "reference":
-            answer_words = answer['answer']['value'].replace('@@ ', '').split()
+            answer_words = answer['answer'].replace('@@ ', '').split()
             nb_words = len(answer_words)
             sent_pen = [ nb_words-x for x in range(NGRAM_ORDER) ]
             new_pen = [ x + y for x, y in zip(self.penalisation, sent_pen )]
-            #print("Penalisation was {}, len(ref) is {}, new penalisation if {}".format(self.penalisation, nb_words, new_pen))
+            print("Penalisation was {}, len(ref) is {}, new penalisation if {}".format(self.penalisation, nb_words, new_pen))
             #print("update penalisation: ref='{}'. length={}".format(' '.join(answer_words), nb_words))
             self.penalisation = new_pen
             return nb_words
@@ -96,7 +96,7 @@ class Algorithm:
             #beat_logger.debug( "mt_user_simulation::validate: System reach maximum cost! ## sentence {} of file {}".format(sent_id, self.file_info.file_id))
             #print( "mt_user_simulation::validate: System reach maximum cost! ## sentence {} of file {}".format(sent_id, self.file_info.file_id))
             answer = {
-                "answer": {"value": self.reference.text[sent_id]},
+                "answer": self.reference.text[sent_id],
                 "response_type": "stop",
                 "file_id": self.file_info.file_id,
                 "sentence_id": sent_id
@@ -104,9 +104,9 @@ class Algorithm:
 
         elif self.file_info.supervision == "active":
             beat_logger.debug( "mt_user_simulation::active: System ask reference for sentence {} of file {}".format(sent_id, self.file_info.file_id))
-            #print( "#########################  mt_user_simulation::active: System ask reference for sentence {} of file {}".format(sent_id, self.file_info.file_id))
+            print( "#########################  mt_user_simulation::active: System ask reference for sentence {} of file {}".format(sent_id, self.file_info.file_id))
             answer = {
-                "answer": {"value": self.reference.text[sent_id]},
+                "answer": self.reference.text[sent_id],
                 "response_type": "reference",
                 "file_id": self.file_info.file_id,
                 "sentence_id": sent_id
@@ -116,7 +116,7 @@ class Algorithm:
             beat_logger.debug( "mt_user_simulation::interactive: human provided reference for sentence {} of file {}".format(sent_id, self.file_info.file_id))
             #print( "############################# mt_user_simulation::interactive: human provided reference for sentence {} of file {}".format(sent_id, self.file_info.file_id))
             answer = {
-                "answer": {"value": self.reference.text[sent_id]},
+                "answer": self.reference.text[sent_id],
                 "response_type": "stop",
                 "file_id": self.file_info.file_id,
                 "sentence_id": sent_id

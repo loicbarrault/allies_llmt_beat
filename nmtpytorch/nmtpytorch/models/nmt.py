@@ -107,7 +107,9 @@ class NMT(nn.Module):
             self.n_trg_vocab = len(self.trg_vocab)
             # Need to be set for early-stop evaluation
             # NOTE: This should come from config or elsewhere
-            self.val_refs = self.opts.data['val_set'][self.tl]
+            # NOTE: maybe there is no validation (e.g. when finetuning)
+            if 'val_set' in self.opts.data.keys():
+                self.val_refs = self.opts.data['val_set'][self.tl]
 
         # Check vocabulary sizes for 3way tying
         if self.opts.model.get('tied_emb', False) not in [False, '2way', '3way']:

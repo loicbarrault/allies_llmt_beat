@@ -85,6 +85,7 @@ class Algorithm:
     # this will be called each time the sync'd input has more data available to be processed
     def process(self, data_loaders, outputs):
 
+        beat_logger.debug("############### mt_train_initial_model")
         dl = data_loaders[0]
         (data, _,end_data_index) = dl[0]
 

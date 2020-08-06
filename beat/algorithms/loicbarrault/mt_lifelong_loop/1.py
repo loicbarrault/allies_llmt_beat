@@ -39,10 +39,16 @@ import struct
 import copy
 import logging
 import random
+import platform
 
+import nmtpytorch
 from nmtpytorch.config import Options, TRAIN_DEFAULTS
+from nmtpytorch.mainloop import MainLoop
 from nmtpytorch.translator import Translator
 from nmtpytorch.utils.beat import beat_separate_train_valid
+from nmtpytorch.utils.misc import setup_experiment, fix_seed
+from nmtpytorch.utils.device import DeviceManager
+from nmtpytorch import models
 
 from pathlib import Path
 
@@ -171,6 +177,7 @@ def generate_system_request_to_user(model, file_id, source,  current_hypothesis)
     """
     # choose a sentence to be translated by the human translator
     # For now, we'll use a random sentence
+    # TODO: find a better way to decide which sentence to translate
     sid = random.randint(0, len(source)-1)
 
     #beat_logger.debug("### mt_lifelong_loop:generate_system_request_to_user")
@@ -182,8 +189,86 @@ def generate_system_request_to_user(model, file_id, source,  current_hypothesis)
 
     return request
 
+def prepare_model_for_tuning(model_data, params, data_dict_tune):
 
-def online_adaptation(model, params, data_dict_train, file_id, doc_source, current_hypothesis):
+    # set the params similarly to train_model
+    # add the pretrained options
+
+    params['pretrained_file'] = model_data
+    #params['eval_zero'] = True
+    params['pretrained_layers'] = ''   # comma sep. list of layer prefixes to initialize
+    params['freeze_layers'] = ''       # comma sep. list of layer prefixes to freeze
+
+    # Prepare tuning and valid data
+    params['data']={}
+    params['data']['train_set']={}
+    params['data']['train_set']['src']=data_dict_tune['src']
+    params['data']['train_set']['trg']=data_dict_tune['trg']
+    #NOTE: No need to valid for finetuning, simply run several epochs
+    #self.params['data']['val_set']={}
+    #self.params['data']['val_set']['src']=self.valid_data['src']
+    #self.params['data']['val_set']['trg']=valid_data['trg']
+
+
+    #get the vocabularies from the model (need to load it with torch then check data['opts']['vocabulary']['src'] / ['trg']
+    in_stream = BytesIO(model_data)
+    model = torch.load(in_stream)
+
+    params['vocabulary']={}
+    params['vocabulary']['src']=model['opts']['vocabulary']['src']
+    params['vocabulary']['trg']=model['opts']['vocabulary']['trg']
+    params['filename']='/not/needed/beat_platform'
+    params['sections']=['train', 'model', 'data', 'vocabulary']
+
+    opts = Options.from_dict(params,{})
+
+    setup_experiment(opts, beat_platform=True)
+    dev_mgr = DeviceManager("gpu")
+
+    # If given, seed that; if not generate a random seed and print it
+    if opts.train['seed'] > 0:
+        seed = fix_seed(opts.train['seed'])
+    else:
+        opts.train['seed'] = fix_seed()
+
+    # Instantiate the model object
+    adapt_model = getattr(models, opts.train['model_type'])(opts=opts, beat_platform=True)
+
+    beat_logger.info("Python {} -- torch {} with CUDA {} (on machine '{}')".format(
+        platform.python_version(), torch.__version__,
+        torch.version.cuda, platform.node()))
+    beat_logger.info("nmtpytorch {}".format(nmtpytorch.__version__))
+    beat_logger.info(dev_mgr)
+    beat_logger.info("Seed for further reproducibility: {}".format(opts.train['seed']))
+
+    loop = MainLoop(adapt_model, opts.train, dev_mgr, beat_platform = True)
+
+    return loop
+
+def select_data(file_id, doc_source, data_dict_train, sent_id,  user_answer):
+
+    # Let's simply select closest document for now
+
+    #For now, let's CHEAT and get the document
+    data_dict_tune = {}
+    data_dict_tune['src'] = []
+    data_dict_tune['trg'] = []
+
+    al_src = doc_source[sent_id]
+    al_trg = user_answer.answer
+
+    # FIXME: for now, just tune on the current sentence (debugging)
+    #for sent in data_dict_train['src']:
+    #    data_dict_tune['src'].append(sent)
+    data_dict_tune['src'].append(al_src)
+    #for sent in data_dict_train['trg']:
+    #    data_dict_tune['trg'].append(sent)
+    data_dict_tune['trg'].append(al_trg)
+
+    return data_dict_tune
+
+
+def online_adaptation(model, params, data_dict_train, file_id, doc_source, current_hypothesis, sent_id, user_answer):
     """
     Include here your code to adapt the model according
     to the human domain expert answer to the request
@@ -194,13 +279,14 @@ def online_adaptation(model, params, data_dict_train, file_id, doc_source, curre
     #print("### mt_lifelong_loop:online_adaptation")
 
     # Tune the model with data similar to the document we want to translate
-    #data_dict_tune = select_data(file_id, doc_source, data_dict_train)
+    data_dict_tune = select_data(file_id, doc_source, data_dict_train, sent_id, user_answer)
 
     # prepare model for adaptation
-    #loop = prepare_model_for_tuning(model, params, data_dict_tune)
+    loop = prepare_model_for_tuning(model, params, data_dict_tune)
     # Run the adaptation
-    #new_model = loop()
-    new_model= model
+    new_model = loop()
+    #NOTE: for debugging, just pass the previous model
+    #new_model= model
 
     return new_model
 
@@ -210,7 +296,7 @@ class Algorithm:
     Main class of the mt_lifelong_loop
     """
     def __init__(self):
-        beat_logger.debug("### mt_lifelong_loop:init -- that's great!")
+        beat_logger.debug("### mt_lifelong_loop:init")
         self.model = None
         self.adapted_model = None
         self.translator = None
@@ -229,11 +315,17 @@ class Algorithm:
         self.params['train']['model_type']=parameters['model_type']
         self.params['train']['patience']=int(parameters['patience'])
         self.params['train']['max_epochs']=2  #int(parameters['max_epochs'])
-        self.params['train']['eval_freq']=int(parameters['eval_freq'])
+        #self.params['train']['eval_freq']=int(parameters['eval_freq'])
+        # NOTE: Disable validation during finetuning
+        self.params['train']['eval_freq']=-1
         #self.params['train']['eval_metrics']=parameters['eval_metrics']
-        self.params['train']['eval_filters']=parameters['eval_filters']
-        self.params['train']['eval_beam']=int(parameters['eval_beam'])
-        self.params['train']['eval_batch_size']=int(parameters['eval_batch_size'])
+        #self.params['train']['eval_metrics']=None
+        #self.params['train']['eval_filters']=parameters['eval_filters']
+        #self.params['train']['eval_filters']=None
+        #self.params['train']['eval_beam']=int(parameters['eval_beam'])
+        #self.params['train']['eval_beam']=None
+        #self.params['train']['eval_batch_size']=int(parameters['eval_batch_size'])
+        #self.params['train']['eval_batch_size']=None
         self.params['train']['save_best_metrics']=parameters['save_best_metrics']
         self.params['train']['eval_max_len']=int(parameters['eval_max_len'])
         self.params['train']['checkpoint_freq']=int(parameters['checkpoint_freq'])
@@ -313,7 +405,6 @@ class Algorithm:
         beat_logger.debug("mt_lifelong_loop::process: received document {} ({} sentences) to translate ".format(file_id, len(source)))
         #beat_logger.debug('mt_lifelong_loop::process: source = {}'.format(source))
 
-
         #TODO: prepare train/valid data for fine-tuning (eventually) -- might not be needed actually as the data is already contained in the training params -> this can be huge!
         current_hypothesis = run_translation(self.translator, source, file_id)
         # If human assisted learning is ON
@@ -335,7 +426,6 @@ class Algorithm:
                                          )
             # update current_hypothesis with current model
             current_hypothesis = run_translation(self.translator, source, file_id)
-
 
         # If human assisted learning mode is on (active or interactive learning)
         while human_assisted_learning:
@@ -361,16 +451,17 @@ class Algorithm:
                 human_assisted_learning, user_answer = loop_channel.validate(message_to_user)
 
                 # Take into account the user answer to generate a new hypothesis and possibly update the model
-                self.adapted_model = online_adaptation(self.model, self.params, self.data_dict_train, file_id, source, current_hypothesis)
+                self.adapted_model = online_adaptation(self.model, self.params, self.data_dict_train, file_id, source, current_hypothesis, request['sentence_id'], user_answer)
 
                 # Update the translator object with the current model
                 model_data = struct.pack('{}B'.format(len(self.adapted_model)), *list(self.adapted_model))
                 self.translate_params['models'] = [model_data]
                 self.translator = Translator(beat_platform=True, **self.translate_params)
 
-                #TODO: Generate a new translation
-                #new_hypothesis = run_translation(translator, source, file_id)
-                new_hypothesis = current_hypothesis
+                # Generate a new translation
+                new_hypothesis = run_translation(self.translator, source, file_id)
+                # NOTE: let's debug by simply using the previous translation
+                #new_hypothesis = current_hypothesis
 
                 #beat_logger.debug("BEFORE online_adaptation: {}".format(current_hypothesis))
                 #beat_logger.debug("AFTER online_adaptation : {}".format(new_hypothesis))
@@ -385,7 +476,7 @@ class Algorithm:
         # Send the current hypothesis
         #    self.init_end_index = 0
         #beat_logger.debug("HYPOTHESIS: {}".format(current_hypothesis))
-        #print("mt_lifelong_loop::process: translated document {}: ".format(file_id), current_hypothesis)
+        print("mt_lifelong_loop::process: translated document {}: ".format(file_id))
         outputs["hypothesis"].write(mt_to_allies(current_hypothesis))
 
         if not inputs.hasMoreData():
