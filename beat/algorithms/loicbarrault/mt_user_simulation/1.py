@@ -37,7 +37,10 @@ import numpy as np
 import pdb
 import sys
 import logging
-from sacrebleu.sacrebleu import NGRAM_ORDER
+#from sacrebleu.sacrebleu import NGRAM_ORDER
+from sacrebleu.metrics import METRICS
+
+NGRAM_ORDER = METRICS['bleu'].NGRAM_ORDER
 
 beat_logger = logging.getLogger('beat_lifelong_mt')
 beat_logger.setLevel(logging.DEBUG)
