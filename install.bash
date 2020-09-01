@@ -17,7 +17,7 @@ conda env create -f environment.yml
 source activate beat_allies
 
 echo "Installing third party tools: nmtpytorch sacrebleu"
-read -n 1 -p "Proceed? [y/n]" choice
+read -n 1 -p "Proceed? [y/n]: " choice
 case "$choice" in 
   y|Y ) echo "Let's go!";;
   n|N ) echo "Quitting..."; exit 1;;
@@ -28,9 +28,9 @@ cd nmtpytorch
 python setup.py develop
 cd ..
 
-cd sacrebleu
-python setup.py install
-cd ..
+#cd sacrebleu
+#python setup.py install
+#cd ..
 
 echo "You can run the baseline system with the following command:"
 echo "beat --prefix `pwd`/beat exp run loicbarrault/loicbarrault/translation_ll_dev/1/translation_ll_dev"
