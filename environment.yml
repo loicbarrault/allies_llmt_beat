@@ -1,4 +1,4 @@
-name: beat_allies
+name: ENVNAME
 channels:
   - https://www.idiap.ch/software/beat/conda
   - defaults

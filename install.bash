@@ -1,5 +1,7 @@
 #! /bin/bash
 
+envname="beat_allies"
+
 echo "Updating conda if necessary"
 conda update -n base conda
 conda config --set show_channel_urls True
@@ -12,11 +14,13 @@ case "$choice" in
   * ) echo "invalid input"; exit 1;;
 esac
 
+
+sed -i 's/ENVNAME/$envname' environment.yml
 conda env create -f environment.yml
 #conda init bash
-source activate beat_allies
+source activate $envname
 
-echo "Installing third party tools: nmtpytorch sacrebleu"
+echo "Installing third party tools: nmtpytorch"
 read -n 1 -p "Proceed? [y/n]: " choice
 case "$choice" in 
   y|Y ) echo "Let's go!";;
@@ -27,10 +31,6 @@ esac
 cd nmtpytorch
 python setup.py develop
 cd ..
-
-#cd sacrebleu
-#python setup.py install
-#cd ..
 
 echo "You can run the baseline system with the following command:"
 echo "beat --prefix `pwd`/beat exp run loicbarrault/loicbarrault/translation_ll_dev/1/translation_ll_dev"
