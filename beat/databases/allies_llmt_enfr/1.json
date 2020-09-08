@@ -14,10 +14,10 @@
                     "parameters": {
                         "source_lang": "en",
                         "target_lang": "fr",
-                        "start_date": "19960415",
-                        "end_date": "19960417",
-                        "dev_start_date": "19960415",
-                        "dev_end_date": "19960416",
+                        "start_date": "19960101",
+                        "end_date": "19991231",
+                        "dev_start_date": "19981217",
+                        "dev_end_date": "19981231",
                         "group": "mt_data_train"
                     },
                     "template": "mt_data_train",
@@ -33,8 +33,8 @@
                     "parameters": {
                         "source_lang": "en",
                         "target_lang": "fr",
-                        "start_date": "20090112",
-                        "end_date": "20090113",
+                        "start_date": "19990101",
+                        "end_date": "19990301",
                         "group": "mt_lifelong",
                         "interactive_ratio" : "0.2"
                     },
@@ -62,5 +62,5 @@
             "template": "translation"
         }
     ],
-    "root_folder": "/lium/users/barrault/llmt"
+    "root_folder": "/home/barrault/projects/allies/allies_llmt_data/en-fr"
 }

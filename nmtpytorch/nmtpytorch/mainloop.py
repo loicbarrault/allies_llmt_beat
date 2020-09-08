@@ -3,6 +3,7 @@ import time
 import logging
 
 import torch
+from io import BytesIO
 
 from .evaluator import Evaluator
 from .optimizer import Optimizer
@@ -82,7 +83,8 @@ class MainLoop:
         if train_opts['pretrained_file']:
             # Relax the strict condition for partial initialization
             if beat_platform:
-                data = train_opts['pretrained_file']
+                in_stream = BytesIO(train_opts['pretrained_file'])
+                data = torch.load(in_stream)
                 train_opts['pretrained_file'] = {}
             else:
                 data = load_pt_file(train_opts['pretrained_file'])

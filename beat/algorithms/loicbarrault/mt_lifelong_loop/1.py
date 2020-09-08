@@ -40,6 +40,7 @@ import copy
 import logging
 import random
 import platform
+import json
 
 import nmtpytorch
 from nmtpytorch.config import Options, TRAIN_DEFAULTS
@@ -194,10 +195,10 @@ def prepare_model_for_tuning(model_data, params, data_dict_tune):
     # set the params similarly to train_model
     # add the pretrained options
 
-    params['pretrained_file'] = model_data
-    #params['eval_zero'] = True
-    params['pretrained_layers'] = ''   # comma sep. list of layer prefixes to initialize
-    params['freeze_layers'] = ''       # comma sep. list of layer prefixes to freeze
+    params['train']['pretrained_file'] = model_data
+    #params['train']['eval_zero'] = True
+    params['train']['pretrained_layers'] = ''   # comma sep. list of layer prefixes to initialize
+    params['train']['freeze_layers'] = ''       # comma sep. list of layer prefixes to freeze
 
     # Prepare tuning and valid data
     params['data']={}
@@ -245,7 +246,75 @@ def prepare_model_for_tuning(model_data, params, data_dict_tune):
 
     return loop
 
-def select_data(file_id, doc_source, data_dict_train, sent_id,  user_answer):
+
+
+def get_sen_vecs(data_dict_train, src_vocab, word_embs):
+    """Getting sentence vectors for all training data 
+
+    Args:
+        data_dict_train: training data with source and target language sentences, dict dtype
+        src_vocab: a vocab dictionary loaded by 
+            #src_vocab = json.loads(opts['vocabulary']['src']), dict dtype
+        word_embs: word embeddings with dim (vocab_size,), 1-d torch.tensor dtpye
+
+    Returns:
+        A matrix of which each row represent a sentence in data_dict_train['src'], torch.tensor dtype
+    """
+
+    sen_vecs = torch.zeros(len(data_dict_train['src']), word_embs.size()[1], 
+        dtype=word_embs.dtype, device=word_embs.device)
+
+    for index_sen, sen in enumerate(data_dict_train['src']):
+        splitsen = sen.split()
+        for token in splitsen:
+            if token in src_vocab.keys():
+                index_token = int(src_vocab[token].split()[0])
+                sen_vecs[index_sen] = word_embs[index_token]
+        sen_vecs[index_sen] /= len(splitsen)
+
+    return sen_vecs
+
+
+def data_selection_emb(N, data_dict_train, train_sen_vecs, doc_input, src_vocab, word_embs):
+    """Selecting topN sentences based on average embedding cosine similarity
+
+    Args:
+        N: top N sentence that want to get
+        data_dict_train: dictionnary containing training data to select from
+        doc_input: an input document for data selection, dtype: dict of list of str (keys are 'src' and 'trg')
+        train_sen_vecs: a matrix of which each row represent a sentence in data_dict_train['src'], torch.tensor dtype
+        src_vocab: a vocabs dictionary loaded by
+            #src_vocabs = json.loads(opts['vocabulary']['src']), dict dtype
+        word_embs: word embeddings with dim (vocab_size,), 1-d torch.tensor dtype
+
+    Returns:
+        Dictionary containing the selected parallel sentences, dtype: dict of list of str (keys are 'src' and 'trg')
+    """
+    n = round(N/len(doc_input)) if N/len(doc_input) >= 1 else 1
+    cos = torch.nn.CosineSimilarity()
+    sens_selected = {}
+    sens_selected['src'] = []
+    sens_selected['trg'] = []
+
+    for sen in doc_input:
+        sen_vec = torch.zeros(1, word_embs.size()[1], dtype=word_embs.dtype, device=word_embs.device)
+        splitsen = sen.split()
+        for token in splitsen:
+            if token in src_vocab.keys():
+                index = int(src_vocab[token].split()[0])
+                sen_vec += word_embs[index]
+        sen_vec /= len(splitsen)
+        coss = cos(sen_vec, train_sen_vecs)
+        coss[torch.isnan(coss)] = 0
+        index_topn_sens = torch.topk(coss, n, largest=True).indices
+        for i in index_topn_sens:
+            sens_selected['src'].append(data_dict_train['src'][i])
+            sens_selected['trg'].append(data_dict_train['trg'][i])
+
+    return sens_selected
+
+
+def select_data(file_id, sent_id, user_answer, doc_source, N, data_dict_train, train_sen_vecs, src_vocab, word_embs):
 
     # Let's simply select closest document for now
 
@@ -257,18 +326,24 @@ def select_data(file_id, doc_source, data_dict_train, sent_id,  user_answer):
     al_src = doc_source[sent_id]
     al_trg = user_answer.answer
 
+    # Get tuning data by selecting similar sentences in the training data
+    data_dict_tune = data_selection_emb(N, data_dict_train, train_sen_vecs, doc_source, src_vocab, word_embs)
+
+    # Add the active learning sentences
+    data_dict_tune['src'].append(al_src)
+    data_dict_tune['trg'].append(al_trg)
+
     # FIXME: for now, just tune on the current sentence (debugging)
     #for sent in data_dict_train['src']:
     #    data_dict_tune['src'].append(sent)
-    data_dict_tune['src'].append(al_src)
     #for sent in data_dict_train['trg']:
     #    data_dict_tune['trg'].append(sent)
-    data_dict_tune['trg'].append(al_trg)
+
 
     return data_dict_tune
 
 
-def online_adaptation(model, params, data_dict_train, file_id, doc_source, current_hypothesis, sent_id, user_answer):
+def online_adaptation(model, params, file_id, sent_id, user_answer, doc_source, current_hypothesis, data_dict_train, train_sen_vecs, src_vocab, word_embs):
     """
     Include here your code to adapt the model according
     to the human domain expert answer to the request
@@ -278,11 +353,15 @@ def online_adaptation(model, params, data_dict_train, file_id, doc_source, curre
     beat_logger.debug("### mt_lifelong_loop:online_adaptation")
     #print("### mt_lifelong_loop:online_adaptation")
 
+
     # Tune the model with data similar to the document we want to translate
-    data_dict_tune = select_data(file_id, doc_source, data_dict_train, sent_id, user_answer)
+    # FIXME: let's select 5k sentences for tuning
+    N = 5000
+    data_dict_tune = select_data(file_id, sent_id, user_answer, doc_source, N, data_dict_train, train_sen_vecs, src_vocab, word_embs)
 
     # prepare model for adaptation
     loop = prepare_model_for_tuning(model, params, data_dict_tune)
+
     # Run the adaptation
     new_model = loop()
     #NOTE: for debugging, just pass the previous model
@@ -304,6 +383,8 @@ class Algorithm:
         self.data_dict_dev = None
         self.translate_params=TRANSLATE_DEFAULTS
         self.init_end_index = -1
+        self.src_vocab = None
+        self.train_sen_vecs = None
 
     def setup(self, parameters):
 
@@ -369,7 +450,6 @@ class Algorithm:
         """
 
         """
-
         ########################################################
         # RECEIVE INCOMING INFORMATION FROM THE FILE TO PROCESS
         ########################################################
@@ -395,6 +475,15 @@ class Algorithm:
                 data_dict = pickle.loads(data["processor_train_data"].text.encode("latin1"))
                 self.data_dict_train, self.data_dict_dev = beat_separate_train_valid(data_dict)
 
+                #Get the vocab from the opts of the model
+                self.src_vocab = json.loads(self.translator.instances[0].opts['vocabulary']['src'])
+                #Get the embeddings from the model's weights
+                self.word_embs = self.translator.instances[0].enc.emb.weight
+                # Create the sentence embeddings for the training data
+                self.train_sen_vecs = get_sen_vecs(self.data_dict_train, self.src_vocab, self.word_embs)
+
+
+
         # Access incoming file information
         # See documentation for a detailed description of the mt_file_info
         file_info = inputs["processor_lifelong_file_info"].data
@@ -402,11 +491,20 @@ class Algorithm:
         supervision = file_info.supervision
         time_stamp = file_info.time_stamp
 
+        
+
+        original_file = '/home/barrault/msc/lifelongmt/original/{}'.format(file_id)
+        adapted_file = '/home/barrault/msc/lifelongmt/adapted/{}'.format(file_id)
+
         beat_logger.debug("mt_lifelong_loop::process: received document {} ({} sentences) to translate ".format(file_id, len(source)))
         #beat_logger.debug('mt_lifelong_loop::process: source = {}'.format(source))
 
         #TODO: prepare train/valid data for fine-tuning (eventually) -- might not be needed actually as the data is already contained in the training params -> this can be huge!
         current_hypothesis = run_translation(self.translator, source, file_id)
+        with open(original_file, 'w') as f:
+            for s in current_hypothesis:
+                f.write(s)
+                f.write('\n')
         # If human assisted learning is ON
         ###################################################################################################
         # Interact with the human if necessary
@@ -434,7 +532,6 @@ class Algorithm:
             # For the case of active learning, this request is overwritten by your system itself
             # For now, only requests of type 'reference' are allowed (i.e. give me the reference translation for sentence 'sentence_id' of file 'file_id')
 
-
             if supervision == "active":
                 # The system can send a question to the human in the loop
                 # by using an object of type request
@@ -451,7 +548,7 @@ class Algorithm:
                 human_assisted_learning, user_answer = loop_channel.validate(message_to_user)
 
                 # Take into account the user answer to generate a new hypothesis and possibly update the model
-                self.adapted_model = online_adaptation(self.model, self.params, self.data_dict_train, file_id, source, current_hypothesis, request['sentence_id'], user_answer)
+                self.adapted_model = online_adaptation(self.model, self.params, file_id, request['sentence_id'], user_answer, source, current_hypothesis, self.data_dict_train, self.train_sen_vecs, self.src_vocab, self.word_embs)
 
                 # Update the translator object with the current model
                 model_data = struct.pack('{}B'.format(len(self.adapted_model)), *list(self.adapted_model))
@@ -462,6 +559,11 @@ class Algorithm:
                 new_hypothesis = run_translation(self.translator, source, file_id)
                 # NOTE: let's debug by simply using the previous translation
                 #new_hypothesis = current_hypothesis
+
+                with open(adapted_file, 'w') as fad:
+                    for s in new_hypothesis:
+                        fad.write(s)
+                        fad.write('\n')
 
                 #beat_logger.debug("BEFORE online_adaptation: {}".format(current_hypothesis))
                 #beat_logger.debug("AFTER online_adaptation : {}".format(new_hypothesis))

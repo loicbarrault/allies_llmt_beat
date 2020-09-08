@@ -151,7 +151,7 @@
             "eval_metrics": "sacrebleu_mem,loss",
             "gclip": 1,
             "l2_reg": 0,
-            "lr": 0.0004,
+            "lr": 0.00004,
             "lr_decay": "plateau",
             "lr_decay_factor": 0.5,
             "lr_decay_patience": 3,
