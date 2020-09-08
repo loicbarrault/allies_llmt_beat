@@ -15,7 +15,7 @@
                         "source_lang": "en",
                         "target_lang": "fr",
                         "start_date": "19960101",
-                        "end_date": "19991231",
+                        "end_date": "19981231",
                         "dev_start_date": "19981217",
                         "dev_end_date": "19981231",
                         "group": "mt_data_train"
