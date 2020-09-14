@@ -41,6 +41,7 @@ import logging
 import random
 import platform
 import json
+import os
 
 import nmtpytorch
 from nmtpytorch.config import Options, TRAIN_DEFAULTS
@@ -356,7 +357,7 @@ def online_adaptation(model, params, file_id, sent_id, user_answer, doc_source, 
 
     # Tune the model with data similar to the document we want to translate
     # FIXME: let's select 5k sentences for tuning
-    N = 5000
+    N = 10000
     data_dict_tune = select_data(file_id, sent_id, user_answer, doc_source, N, data_dict_train, train_sen_vecs, src_vocab, word_embs)
 
     # prepare model for adaptation
@@ -379,6 +380,7 @@ class Algorithm:
         self.model = None
         self.adapted_model = None
         self.translator = None
+        self.adapted_translator = None
         self.data_dict_train = None
         self.data_dict_dev = None
         self.translate_params=TRANSLATE_DEFAULTS
@@ -395,7 +397,7 @@ class Algorithm:
         self.params['train']['seed']=int(parameters['seed'])
         self.params['train']['model_type']=parameters['model_type']
         self.params['train']['patience']=int(parameters['patience'])
-        self.params['train']['max_epochs']=2  #int(parameters['max_epochs'])
+        self.params['train']['max_epochs']=int(parameters['max_epochs'])
         #self.params['train']['eval_freq']=int(parameters['eval_freq'])
         # NOTE: Disable validation during finetuning
         self.params['train']['eval_freq']=-1
@@ -491,7 +493,9 @@ class Algorithm:
         supervision = file_info.supervision
         time_stamp = file_info.time_stamp
 
-        
+        for p in ('original', 'adapted'):
+            if not os.path.exists('/home/barrault/msc/lifelongmt/{}'.format(p)):
+                os.mkdir('/home/barrault/msc/lifelongmt/{}'.format(p))
 
         original_file = '/home/barrault/msc/lifelongmt/original/{}'.format(file_id)
         adapted_file = '/home/barrault/msc/lifelongmt/adapted/{}'.format(file_id)
@@ -515,7 +519,7 @@ class Algorithm:
         if not human_assisted_learning:
             # In this method, see how to access initial training data to adapt the model
             # for the new incoming data
-            self.model, self.translator = unsupervised_model_adaptation(source,
+            self.model, self.adapted_translator = unsupervised_model_adaptation(source,
                                          file_id,
                                          self.train_data,
                                          self.model,
@@ -523,7 +527,7 @@ class Algorithm:
                                          current_hypothesis
                                          )
             # update current_hypothesis with current model
-            current_hypothesis = run_translation(self.translator, source, file_id)
+            current_hypothesis = run_translation(self.adapted_translator, source, file_id)
 
         # If human assisted learning mode is on (active or interactive learning)
         while human_assisted_learning:
@@ -553,10 +557,10 @@ class Algorithm:
                 # Update the translator object with the current model
                 model_data = struct.pack('{}B'.format(len(self.adapted_model)), *list(self.adapted_model))
                 self.translate_params['models'] = [model_data]
-                self.translator = Translator(beat_platform=True, **self.translate_params)
+                self.adapted_translator = Translator(beat_platform=True, **self.translate_params)
 
                 # Generate a new translation
-                new_hypothesis = run_translation(self.translator, source, file_id)
+                new_hypothesis = run_translation(self.aapted_translator, source, file_id)
                 # NOTE: let's debug by simply using the previous translation
                 #new_hypothesis = current_hypothesis
 

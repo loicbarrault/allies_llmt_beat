@@ -156,7 +156,7 @@
             "lr_decay_factor": 0.5,
             "lr_decay_patience": 3,
             "lr_decay_revert": false,
-            "max_epochs": 100,
+            "max_epochs": 10,
             "max_len": "None",
             "model_type": "NMT",
             "n_checkpoints": 4,
