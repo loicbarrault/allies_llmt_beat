@@ -560,7 +560,7 @@ class Algorithm:
                 self.adapted_translator = Translator(beat_platform=True, **self.translate_params)
 
                 # Generate a new translation
-                new_hypothesis = run_translation(self.aapted_translator, source, file_id)
+                new_hypothesis = run_translation(self.adapted_translator, source, file_id)
                 # NOTE: let's debug by simply using the previous translation
                 #new_hypothesis = current_hypothesis
 
