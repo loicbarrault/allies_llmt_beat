@@ -163,7 +163,7 @@ def unsupervised_model_adaptation(source,
     return model, translator
 
 
-def generate_system_request_to_user(model, file_id, source,  current_hypothesis):
+def generate_system_request_to_user(file_id, source,  current_hypothesis):
     """
     Include here your code to ask "questions" to the human in the loop
 
@@ -379,11 +379,10 @@ class Algorithm:
         beat_logger.debug("### mt_lifelong_loop:init")
         self.model = None
         self.adapted_model = None
-        self.translator = None
-        self.adapted_translator = None
         self.data_dict_train = None
         self.data_dict_dev = None
         self.translate_params=TRANSLATE_DEFAULTS
+        self.adapted_translate_params=TRANSLATE_DEFAULTS
         self.init_end_index = -1
         self.src_vocab = None
         self.train_sen_vecs = None
@@ -459,31 +458,34 @@ class Algorithm:
         # Access source text of the current file to process
         source = inputs["processor_lifelong_source"].data.text
 
-        if self.translator is None or self.data_dict_train is None:
+
+        if self.model is None or self.data_dict_train is None:
             # Get the model after initial training
             dl = data_loaders[0]
             (data, _,end_index) = dl[0]
 
-            # Create the nmtpy Translator object to translate
-            if self.translator is None:
+            # Store the baseline model
+            if self.model is None:
                 model_data = data['model'].value
                 self.model = struct.pack('{}B'.format(len(model_data)), *list(model_data))
-                # Create a Translator object from nmtpy
-                self.translate_params['models'] = [self.model]
-                self.translate_params['source'] = source
-                self.translator = Translator(beat_platform=True, **self.translate_params)
 
             if self.data_dict_train is None:
                 data_dict = pickle.loads(data["processor_train_data"].text.encode("latin1"))
                 self.data_dict_train, self.data_dict_dev = beat_separate_train_valid(data_dict)
 
-                #Get the vocab from the opts of the model
-                self.src_vocab = json.loads(self.translator.instances[0].opts['vocabulary']['src'])
-                #Get the embeddings from the model's weights
-                self.word_embs = self.translator.instances[0].enc.emb.weight
-                # Create the sentence embeddings for the training data
-                self.train_sen_vecs = get_sen_vecs(self.data_dict_train, self.src_vocab, self.word_embs)
 
+        # Create a baseline Translator object from nmtpy
+        self.translate_params['models'] = [self.model]
+        self.translate_params['source'] = source
+        translator = Translator(beat_platform=True, **self.translate_params)
+
+        if self.train_sen_vecs is None:
+            #Get the vocab from the opts of the model
+            self.src_vocab = json.loads(translator.instances[0].opts['vocabulary']['src'])
+            #Get the embeddings from the model's weights
+            self.word_embs = translator.instances[0].enc.emb.weight
+            # Create the sentence embeddings for the training data
+            self.train_sen_vecs = get_sen_vecs(self.data_dict_train, self.src_vocab, self.word_embs)
 
 
         # Access incoming file information
@@ -504,7 +506,7 @@ class Algorithm:
         #beat_logger.debug('mt_lifelong_loop::process: source = {}'.format(source))
 
         #TODO: prepare train/valid data for fine-tuning (eventually) -- might not be needed actually as the data is already contained in the training params -> this can be huge!
-        current_hypothesis = run_translation(self.translator, source, file_id)
+        current_hypothesis = run_translation(translator, source, file_id)
         with open(original_file, 'w') as f:
             for s in current_hypothesis:
                 f.write(s)
@@ -519,15 +521,15 @@ class Algorithm:
         if not human_assisted_learning:
             # In this method, see how to access initial training data to adapt the model
             # for the new incoming data
-            self.model, self.adapted_translator = unsupervised_model_adaptation(source,
+            self.adapted_model, adapted_translator = unsupervised_model_adaptation(source,
                                          file_id,
                                          self.train_data,
                                          self.model,
-                                         self.translator,
+                                         translator,
                                          current_hypothesis
                                          )
             # update current_hypothesis with current model
-            current_hypothesis = run_translation(self.adapted_translator, source, file_id)
+            current_hypothesis = run_translation(adapted_translator, source, file_id)
 
         # If human assisted learning mode is on (active or interactive learning)
         while human_assisted_learning:
@@ -540,7 +542,7 @@ class Algorithm:
                 # The system can send a question to the human in the loop
                 # by using an object of type request
                 # The request is the question asked to the system
-                request = generate_system_request_to_user(self.model, file_id, source, current_hypothesis)
+                request = generate_system_request_to_user(file_id, source, current_hypothesis)
 
                 # Send the request to the user and wait for the answer
                 message_to_user = {
@@ -552,15 +554,16 @@ class Algorithm:
                 human_assisted_learning, user_answer = loop_channel.validate(message_to_user)
 
                 # Take into account the user answer to generate a new hypothesis and possibly update the model
-                self.adapted_model = online_adaptation(self.model, self.params, file_id, request['sentence_id'], user_answer, source, current_hypothesis, self.data_dict_train, self.train_sen_vecs, self.src_vocab, self.word_embs)
+                adapted_model_data = online_adaptation(self.model, self.params, file_id, request['sentence_id'], user_answer, source, current_hypothesis, self.data_dict_train, self.train_sen_vecs, self.src_vocab, self.word_embs)
 
                 # Update the translator object with the current model
-                model_data = struct.pack('{}B'.format(len(self.adapted_model)), *list(self.adapted_model))
-                self.translate_params['models'] = [model_data]
-                self.adapted_translator = Translator(beat_platform=True, **self.translate_params)
+                self.adapted_model = struct.pack('{}B'.format(len(adapted_model_data)), *list(adapted_model_data))
+                self.adapted_translate_params['models'] = [self.adapted_model]
+                self.adapted_translate_params['source'] = source
+                adapted_translator = Translator(beat_platform=True, **self.adapted_translate_params)
 
                 # Generate a new translation
-                new_hypothesis = run_translation(self.adapted_translator, source, file_id)
+                new_hypothesis = run_translation(adapted_translator, source, file_id)
                 # NOTE: let's debug by simply using the previous translation
                 #new_hypothesis = current_hypothesis
 
@@ -582,7 +585,7 @@ class Algorithm:
         # Send the current hypothesis
         #    self.init_end_index = 0
         #beat_logger.debug("HYPOTHESIS: {}".format(current_hypothesis))
-        print("mt_lifelong_loop::process: translated document {}: ".format(file_id))
+        print("mt_lifelong_loop::process: FINISHED translated document {}: ".format(file_id))
         outputs["hypothesis"].write(mt_to_allies(current_hypothesis))
 
         if not inputs.hasMoreData():
