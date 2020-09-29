@@ -292,6 +292,8 @@ def data_selection_emb(N, data_dict_train, train_sen_vecs, doc_input, src_vocab,
         Dictionary containing the selected parallel sentences, dtype: dict of list of str (keys are 'src' and 'trg')
     """
     n = round(N/len(doc_input)) if N/len(doc_input) >= 1 else 1
+    n = min(n, train_sen_vecs.shape[0])
+
     cos = torch.nn.CosineSimilarity()
     sens_selected = {}
     sens_selected['src'] = []
