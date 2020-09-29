@@ -10,7 +10,7 @@
         {
             "inputs": [ "train_source_raw", "train_target_raw", "train_file_info" ],
             "name": "mt_train_preprocessor",
-            "outputs": [ "train_data_tokenized", "source_vocabulary", "target_vocabulary", "subword_model", "subword_src_vocabulary", "subword_target_vocabulary" ],
+            "outputs": [ "train_data_tokenized", "source_vocabulary", "target_vocabulary", "subword_model", "subword_source_vocabulary", "subword_target_vocabulary" ],
             "synchronized_channel": "mt_data_train"
         },
         {
