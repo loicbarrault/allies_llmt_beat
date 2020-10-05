@@ -1,0 +1,66 @@
+{
+    "description": "References and sources for machine translation from the WMT (Europarl, NewsCommentary) data",
+    "protocols": [
+        {
+            "name": "translation",
+            "sets": [
+                {
+                    "name": "mt_data_train",
+                    "outputs": {
+                        "source": "system/array_1d_text/1",
+                        "target": "system/array_1d_text/1",
+                        "file_info": "loicbarrault/mt_file_info/1"
+                    },
+                    "parameters": {
+                        "source_lang": "en",
+                        "target_lang": "de",
+                        "start_date": "19960101",
+                        "end_date": "20131231",
+                        "dev_start_date": "20131120",
+                        "dev_end_date": "20131231",
+                        "group": "mt_data_train"
+                    },
+                    "template": "mt_data_train",
+                    "view": "View"
+                },
+                {
+                    "name": "mt_data_lifelong",
+                    "outputs": {
+                        "source": "system/array_1d_text/1",
+                        "target": "system/array_1d_text/1",
+                        "file_info": "loicbarrault/mt_file_info/1"
+                    },
+                    "parameters": {
+                        "source_lang": "en",
+                        "target_lang": "de",
+                        "start_date": "20140101",
+                        "end_date": "20140102",
+                        "group": "mt_lifelong",
+                        "interactive_ratio" : "0"
+                    },
+                    "template": "mt_data_lifelong",
+                    "view": "View"
+                },
+                {
+                    "name": "mt_test",
+                    "outputs": {
+                        "source": "system/array_1d_text/1",
+                        "target": "system/array_1d_text/1",
+                        "file_info": "loicbarrault/mt_file_info/1"
+                    },
+                    "parameters": {
+                        "source_lang": "en",
+                        "target_lang": "de",
+                        "start_date": "20000217",
+                        "end_date": "20000301",
+                        "group": "mt_test"
+                    },
+                    "template": "mt_test",
+                    "view": "View"
+                }
+            ],
+            "template": "translation"
+        }
+    ],
+    "root_folder": "/home/barrault/projects/allies/allies_llmt_data/en-de"
+}
