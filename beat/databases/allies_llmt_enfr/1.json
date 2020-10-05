@@ -15,9 +15,9 @@
                         "source_lang": "en",
                         "target_lang": "fr",
                         "start_date": "19960101",
-                        "end_date": "19981231",
-                        "dev_start_date": "19981217",
-                        "dev_end_date": "19981231",
+                        "end_date": "20131231",
+                        "dev_start_date": "20131201",
+                        "dev_end_date": "20131231",
                         "group": "mt_data_train"
                     },
                     "template": "mt_data_train",
@@ -33,10 +33,10 @@
                     "parameters": {
                         "source_lang": "en",
                         "target_lang": "fr",
-                        "start_date": "19990101",
-                        "end_date": "19990301",
+                        "start_date": "20140101",
+                        "end_date": "20140102",
                         "group": "mt_lifelong",
-                        "interactive_ratio" : "0.2"
+                        "interactive_ratio" : "0"
                     },
                     "template": "mt_data_lifelong",
                     "view": "View"

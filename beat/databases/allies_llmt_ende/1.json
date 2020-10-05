@@ -36,7 +36,7 @@
                         "start_date": "20090112",
                         "end_date": "20090113",
                         "group": "mt_lifelong",
-                        "interactive_ratio" : "0.2"
+                        "interactive_ratio" : "0"
                     },
                     "template": "mt_data_lifelong",
                     "view": "View"
@@ -62,5 +62,5 @@
             "template": "translation"
         }
     ],
-    "root_folder": "/home/usuaris/veu/magdalena.biesialska/projects/beat/allies_llmt_data/en-de"
+    "root_folder": "/home/barrault/projects/allies/allies_llmt_data/en-de"
 }
