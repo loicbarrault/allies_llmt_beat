@@ -56,6 +56,9 @@ from pathlib import Path
 
 from io import BytesIO
 
+import kiwi
+import statistics
+
 import ipdb
 
 beat_logger = logging.getLogger('beat_lifelong_mt')
@@ -162,8 +165,24 @@ def unsupervised_model_adaptation(source,
     
     return model, translator
 
+def get_worst_translation(source, current_hypothesis, qe_model):
+    worst_translation = {'index_sen':-1, 'prediction':0.0}
+    # loop over all sentences in the file
+    for index_sen, sen in enumerate(source):
+        # for each sentence predict score - the sentence score is a prediction of the sentence's HTER (Human-targeted Translation Error Rate). Or in other words, what is the percentage of the sentence that you would need to change to create a correct translation.
+        source_list = list(sen.split())
+        target_list = list(current_hypothesis[index_sen].split())
+        if not target_list:
+            target_list.append('@')
+        examples = {'source':source_list, 'target':target_list}
+        predictions = qe_model.predict(examples)
+        avg_translation_score = statistics.mean(predictions['sentence_scores'])
+        if worst_translation['prediction'] <= avg_translation_score:
+            worst_translation.update({'index_sen':index_sen,'prediction':avg_translation_score})
 
-def generate_system_request_to_user(file_id, source,  current_hypothesis):
+    return worst_translation['index_sen']
+
+def generate_system_request_to_user(file_id, source, current_hypothesis, qe_model):
     """
     Include here your code to ask "questions" to the human in the loop
 
@@ -178,10 +197,13 @@ def generate_system_request_to_user(file_id, source,  current_hypothesis):
     sentence_id must be a unsigned int between 0 and document length
     """
     # choose a sentence to be translated by the human translator
-    # For now, we'll use a random sentence
-    # TODO: find a better way to decide which sentence to translate
-    sid = random.randint(0, len(source)-1)
-
+    if qe_model is None:        
+        # For now, we'll use a random sentence
+        sid = random.randint(0, len(source)-1)
+    else:
+        # the worst translated sentence selected by OpenKiwi
+        sid = get_worst_translation(source, current_hypothesis, qe_model)
+    
     #beat_logger.debug("### mt_lifelong_loop:generate_system_request_to_user")
     request = {
            "request_type": "reference",
@@ -390,7 +412,6 @@ class Algorithm:
         self.train_sen_vecs = None
 
     def setup(self, parameters):
-
         self.params={}
         self.params['train']=TRAIN_DEFAULTS
         self.params['model']={}
@@ -446,6 +467,12 @@ class Algorithm:
             self.params['model']['max_len']=int(parameters['max_len'])
         self.params['model']['direction']="src:Text -> trg:Text"
 
+        self.qe_model = None
+        if parameters['direction'][11:13]=='de':
+            # load EN-DE model
+            kiwi_path = os.path.abspath(os.path.join(os.pardir,'openkiwi/trained_models/estimator_en_de.torch/estimator_en_de.torch'))
+            self.qe_model = kiwi.load_model(kiwi_path)
+
         return True
 
     def process(self, inputs, data_loaders, outputs, loop_channel):
@@ -497,12 +524,13 @@ class Algorithm:
         supervision = file_info.supervision
         time_stamp = file_info.time_stamp
 
+        path_llnmt = '/home/barrault/msc/lifelongmt/'
         for p in ('original', 'adapted'):
-            if not os.path.exists('/home/barrault/msc/lifelongmt/{}'.format(p)):
-                os.mkdir('/home/barrault/msc/lifelongmt/{}'.format(p))
-
-        original_file = '/home/barrault/msc/lifelongmt/original/{}'.format(file_id)
-        adapted_file = '/home/barrault/msc/lifelongmt/adapted/{}'.format(file_id)
+            if not os.path.exists(path_llnmt + '{}'.format(p)):
+                os.mkdir(path_llnmt+ '{}'.format(p))
+        
+        original_file = path_llnmt + 'original/{}'.format(file_id)
+        adapted_file = path_llnmt + 'adapted/{}'.format(file_id)
 
         beat_logger.debug("mt_lifelong_loop::process: received document {} ({} sentences) to translate ".format(file_id, len(source)))
         #beat_logger.debug('mt_lifelong_loop::process: source = {}'.format(source))
@@ -544,7 +572,7 @@ class Algorithm:
                 # The system can send a question to the human in the loop
                 # by using an object of type request
                 # The request is the question asked to the system
-                request = generate_system_request_to_user(file_id, source, current_hypothesis)
+                request = generate_system_request_to_user(file_id, source, current_hypothesis, self.qe_model)
 
                 # Send the request to the user and wait for the answer
                 message_to_user = {

@@ -1,4 +1,4 @@
-name: ENVNAME
+name: beat_allies
 channels:
   - https://www.idiap.ch/software/beat/conda
   - defaults
@@ -17,6 +17,7 @@ dependencies:
   - wheel=0.34.2
   - tensorboard=2.1.0
   - pip
+  - pyyaml=3.13
   - pip:
     - torch==1.4.0
     - torchvision==0.5.0
@@ -30,3 +31,5 @@ dependencies:
     - pathlib
     - mecab-python3
     - sacrebleu
+    - nltk
+    - openkiwi==0.1.3
