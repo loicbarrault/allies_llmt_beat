@@ -381,7 +381,7 @@ def online_adaptation(model, params, file_id, sent_id, user_answer, doc_source, 
 
     # Tune the model with data similar to the document we want to translate
     # FIXME: let's select 5k sentences for tuning
-    N = 10000
+    N = 15000
     data_dict_tune = select_data(file_id, sent_id, user_answer, doc_source, N, data_dict_train, train_sen_vecs, src_vocab, word_embs)
 
     # prepare model for adaptation
@@ -410,62 +410,66 @@ class Algorithm:
         self.init_end_index = -1
         self.src_vocab = None
         self.train_sen_vecs = None
+        self.data_dict_al = None
+        self.data_dict_unsup = None
 
     def setup(self, parameters):
-        self.params={}
-        self.params['train']=TRAIN_DEFAULTS
-        self.params['model']={}
+        #self.params={}
+        self.translate_params['train']=TRAIN_DEFAULTS
+        self.translate_params['model']={}
 
-        self.params['train']['seed']=int(parameters['seed'])
-        self.params['train']['model_type']=parameters['model_type']
-        self.params['train']['patience']=int(parameters['patience'])
-        self.params['train']['max_epochs']=int(parameters['max_epochs'])
-        #self.params['train']['eval_freq']=int(parameters['eval_freq'])
+        self.translate_params['train']['seed']=int(parameters['seed'])
+        self.translate_params['train']['model_type']=parameters['model_type']
+        self.translate_params['train']['patience']=int(parameters['patience'])
+        self.translate_params['train']['max_epochs']=int(parameters['max_epochs'])
+        #self.translate_params['train']['eval_freq']=int(parameters['eval_freq'])
         # NOTE: Disable validation during finetuning
-        self.params['train']['eval_freq']=-1
-        #self.params['train']['eval_metrics']=parameters['eval_metrics']
-        #self.params['train']['eval_metrics']=None
-        #self.params['train']['eval_filters']=parameters['eval_filters']
-        #self.params['train']['eval_filters']=None
-        #self.params['train']['eval_beam']=int(parameters['eval_beam'])
-        #self.params['train']['eval_beam']=None
-        #self.params['train']['eval_batch_size']=int(parameters['eval_batch_size'])
-        #self.params['train']['eval_batch_size']=None
-        self.params['train']['save_best_metrics']=parameters['save_best_metrics']
-        self.params['train']['eval_max_len']=int(parameters['eval_max_len'])
-        self.params['train']['checkpoint_freq']=int(parameters['checkpoint_freq'])
-        #self.params['train']['n_checkpoints']=parameters['n_checkpoints']
-        self.params['train']['l2_reg']=int(parameters['l2_reg'])
-        self.params['train']['lr_decay']=parameters['lr_decay']
-        self.params['train']['lr_decay_revert']=parameters['lr_decay_revert']
-        self.params['train']['lr_decay_factor']=parameters['lr_decay_factor']
-        self.params['train']['lr_decay_patience']=int(parameters['lr_decay_patience'])
-        self.params['train']['gclip']=int(parameters['gclip'])
-        self.params['train']['optimizer']=parameters['optimizer']
-        self.params['train']['lr']=parameters['lr']
-        self.params['train']['batch_size']=int(parameters['batch_size'])
-        self.params['train']['save_optim_state']=False
+        self.translate_params['train']['eval_freq']=-1
+        #self.translate_params['train']['eval_metrics']=parameters['eval_metrics']
+        #self.translate_params['train']['eval_metrics']=None
+        #self.translate_params['train']['eval_filters']=parameters['eval_filters']
+        #self.translate_params['train']['eval_filters']=None
+        #self.translate_params['train']['eval_beam']=int(parameters['eval_beam'])
+        #self.translate_params['train']['eval_beam']=None
+        #self.translate_params['train']['eval_batch_size']=int(parameters['eval_batch_size'])
+        #self.translate_params['train']['eval_batch_size']=None
+        self.translate_params['train']['save_best_metrics']=parameters['save_best_metrics']
+        self.translate_params['train']['eval_max_len']=int(parameters['eval_max_len'])
+        self.translate_params['train']['checkpoint_freq']=int(parameters['checkpoint_freq'])
+        #self.translate_params['train']['n_checkpoints']=parameters['n_checkpoints']
+        self.translate_params['train']['l2_reg']=int(parameters['l2_reg'])
+        self.translate_params['train']['lr_decay']=parameters['lr_decay']
+        self.translate_params['train']['lr_decay_revert']=parameters['lr_decay_revert']
+        self.translate_params['train']['lr_decay_factor']=parameters['lr_decay_factor']
+        self.translate_params['train']['lr_decay_patience']=int(parameters['lr_decay_patience'])
+        self.translate_params['train']['gclip']=int(parameters['gclip'])
+        self.translate_params['train']['optimizer']=parameters['optimizer']
+        self.translate_params['train']['lr']=parameters['lr']
+        self.translate_params['train']['batch_size']=int(parameters['batch_size'])
+        self.translate_params['train']['save_optim_state']=False
 
-        self.params['train']['save_path']=Path("/not/used/because/beat_platform")
-        #self.params['train']['tensorboard_dir']="/lium/users/barrault/llmt/tensorboard"
+        self.translate_params['train']['save_path']=Path("/not/used/because/beat_platform")
+        #self.translate_params['train']['tensorboard_dir']="/lium/users/barrault/llmt/tensorboard"
 
-        self.params['model']['att_type']=parameters['att_type']
-        self.params['model']['att_bottleneck']=parameters['att_bottleneck']
-        self.params['model']['enc_dim']=int(parameters['enc_dim'])
-        self.params['model']['dec_dim']=int(parameters['dec_dim'])
-        self.params['model']['emb_dim']=int(parameters['emb_dim'])
-        self.params['model']['dropout_emb']=parameters['dropout_emb']
-        self.params['model']['dropout_ctx']=parameters['dropout_ctx']
-        self.params['model']['dropout_out']=parameters['dropout_out']
-        self.params['model']['n_encoders']=int(parameters['n_encoders'])
-        self.params['model']['tied_emb']=parameters['tied_emb']
-        self.params['model']['dec_init']=parameters['dec_init']
-        self.params['model']['bucket_by']="src"
+        self.translate_params['model']['att_type']=parameters['att_type']
+        self.translate_params['model']['att_bottleneck']=parameters['att_bottleneck']
+        self.translate_params['model']['enc_dim']=int(parameters['enc_dim'])
+        self.translate_params['model']['dec_dim']=int(parameters['dec_dim'])
+        self.translate_params['model']['emb_dim']=int(parameters['emb_dim'])
+        self.translate_params['model']['dropout_emb']=parameters['dropout_emb']
+        self.translate_params['model']['dropout_ctx']=parameters['dropout_ctx']
+        self.translate_params['model']['dropout_out']=parameters['dropout_out']
+        self.translate_params['model']['n_encoders']=int(parameters['n_encoders'])
+        self.translate_params['model']['tied_emb']=parameters['tied_emb']
+        self.translate_params['model']['dec_init']=parameters['dec_init']
+        self.translate_params['model']['bucket_by']="src"
         if parameters['max_len']=="None":
-            self.params['model']['max_len']=None
+            self.translate_params['model']['max_len']=None
         else:
-            self.params['model']['max_len']=int(parameters['max_len'])
-        self.params['model']['direction']="src:Text -> trg:Text"
+            self.translate_params['model']['max_len']=int(parameters['max_len'])
+        self.translate_params['model']['direction']="src:Text -> trg:Text"
+
+        self.adapted_translate_params = copy.deepcopy(self.translate_params)
 
         self.qe_model = None
         if parameters['direction'][11:13]=='de':
@@ -487,7 +491,7 @@ class Algorithm:
         # Access source text of the current file to process
         source = inputs["processor_lifelong_source"].data.text
 
-
+        # recreate the translation model and train/dev data
         if self.model is None or self.data_dict_train is None:
             # Get the model after initial training
             dl = data_loaders[0]
@@ -508,6 +512,7 @@ class Algorithm:
         self.translate_params['source'] = source
         translator = Translator(beat_platform=True, **self.translate_params)
 
+        # train sentence vectors for data selection
         if self.train_sen_vecs is None:
             #Get the vocab from the opts of the model
             self.src_vocab = json.loads(translator.instances[0].opts['vocabulary']['src'])
@@ -547,7 +552,7 @@ class Algorithm:
         # This section exchange information with the user simulation and ends up with a new hypothesis
         ###################################################################################################
         human_assisted_learning = supervision in ["active", "interactive"]
-
+        # code not used!!
         if not human_assisted_learning:
             # In this method, see how to access initial training data to adapt the model
             # for the new incoming data
@@ -584,7 +589,7 @@ class Algorithm:
                 human_assisted_learning, user_answer = loop_channel.validate(message_to_user)
 
                 # Take into account the user answer to generate a new hypothesis and possibly update the model
-                adapted_model_data = online_adaptation(self.model, self.params, file_id, request['sentence_id'], user_answer, source, current_hypothesis, self.data_dict_train, self.train_sen_vecs, self.src_vocab, self.word_embs)
+                adapted_model_data = online_adaptation(self.model, self.translate_params, file_id, request['sentence_id'], user_answer, source, current_hypothesis, self.data_dict_train, self.train_sen_vecs, self.src_vocab, self.word_embs)
 
                 # Update the translator object with the current model
                 self.adapted_model = struct.pack('{}B'.format(len(adapted_model_data)), *list(adapted_model_data))
